@@ -244,3 +244,15 @@ Ansible プレイブックを実行する際に、`ansible_host` の値をコマ
    ```
 
 </Steps>
+
+複数の変数指定するには `-e` オプションで複数回指定する
+
+```bash
+ansible-playbook \
+    -i "$INVENTORY_FILE_PATH" \
+    "$PLAYBOOK_FILE_PATH" \
+    -e "web01_ip=$WEB01_IP"\
+    -e "name_tag_prefix=${ENV}.${SYSTEM}"\
+    -e "aws_profile=development"
+```
+また、このコマンドで渡した変数は インベントリ、プレイブックファイル内で参照して利用できます。
