@@ -1,0 +1,50 @@
+---
+title: go コマンド index
+description: Go 言語の導入方法
+tags:
+  - "Golang"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: index
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 1
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+## go コマンドについて
+
+開発環境のインストールによって、一連の開発用ツールが利用可能になります。すべてのツールは `go` コマンドで実行できます。コンパイラ、コードのフォーマット、リンター、依存性管理、テストランナー、ビルド、パッケージのインストールなどがあります。
+
+### go サブコマンド一覧
+
+<Table
+  columns={["サブコマンド", "説明"]}
+  data={[
+    ["bug", "バグレポートを作成する"],
+    ["build", "パッケージをビルドする"],
+    ["clean", "ビルドキャッシュを削除する"],
+    ["doc", "パッケージのドキュメントを表示する"],
+    ["env", "Go 環境変数を表示する"],
+    ["fix", "パッケージを更新する"],
+    ["fmt", "パッケージをフォーマットする"],
+    ["generate", "Go ファイルを生成する"],
+    ["get", "パッケージを追加する"],
+    ["install", "パッケージをインストールする"],
+    ["list", "パッケージをリストする"],
+    ["mod", "モジュールを管理する"],
+    ["work", "ワークスペースを管理する"],
+    ["run", "パッケージを実行する"],
+    ["test", "パッケージをテストする"],
+    ["tool", "指定された Go ツールを実行する"],
+    ["version", "Go のバージョンを表示する"],
+    ["vet", "パッケージ内の潜在的なエラーを報告する"],
+  ]}
+/>

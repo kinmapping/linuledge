@@ -14,7 +14,10 @@
         "astro",
         "astrojs",
         "biomejs",
+        "boto",
+        "botocore",
         "Datetime",
+        "frontmatter",
         "jschardet",
         "linuledge",
         "mbump",
@@ -25,7 +28,6 @@
         "tsconfigs",
         "turso",
         "UEFI",
-        "Usacloud",
-        "frontmatter"
+        "Usacloud"
     ]
 }

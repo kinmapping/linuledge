@@ -2,98 +2,104 @@
 title: IAM ポリシーの作成
 description: IAM ポリシーの作成
 tags:
-    - "Terraform"
-    - "AWS"
+  - "Terraform"
+  - "AWS"
 sidebar:
-    # このリンクのカスタムラベルを設定します
-    label: IAM ポリシーの作成
-    # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
-    order: 10
-    # このリンクにバッジを追加します
-    # badge:
-    #     text: ""
-    #     variant: tip
+  # このリンクのカスタムラベルを設定します
+  label: IAM ポリシーの作成
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 10
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
 ---
 
 import { LinkCard, Tabs, TabItem, Steps, FileTree } from "@astrojs/starlight/components";
 import LinkPreview from "@components/LinkPreview.astro";
 import Table from "@components/Table.astro";
 
-##  AMI使用許可を出すIAM ユーザーの作成
+## AMI 使用許可を出す IAM ユーザーの作成
 
 ### 作りたいこと
+
+<Steps>
+
 1. すでに作成済みの AMI を別アカウントに使用許可をわたせる IAM ポリシーを作成する(AllowAmiPermitPolicy)
 1. AllowAmiPermitPolicy を IAM ユーザー(AllowAmiPermit)を作成して関連付ける
 1. AllowAmiPermit のアクセスキーを作成
 1. アクセスキーの保管
 1. これらを Terraform 化
 
+</Steps>
 使用許可を渡した先の AWS アカウントの使用リージョンも考慮します。
 
 ### AllowAmiPermitPolicy(IAM ポリシーの作成)
-#### 必要なアクション
-AMIのコピーおよび共有に必要な主なアクションは以下の通り
 
-1. AMIのコピー
-  - `ec2:CopyImage`: AMIを別のリージョンにコピーするため。
-1. AMIの属性の変更（共有）
-  - `ec2:ModifyImageAttribute`: AMIの属性を変更し、他のアカウントと共有するため。
-1. AMIおよびスナップショットの情報取得
-  - `ec2:DescribeImages`: AMIの詳細情報を取得するため。
-  - `ec2:DescribeSnapshots`: AMIに関連付けられたスナップショットの詳細情報を取得するため。
+#### 必要なアクション
+
+AMI のコピーおよび共有に必要な主なアクションは以下の通り
+
+1. AMI のコピー
+
+   - `ec2:CopyImage`: AMI を別のリージョンにコピーするため。
+
+1. AMI の属性の変更（共有）
+
+   - `ec2:ModifyImageAttribute`: AMI の属性を変更し、他のアカウントと共有するため。
+
+1. AMI およびスナップショットの情報取得
+
+   - `ec2:DescribeImages`: AMI の詳細情報を取得するため。
+   - `ec2:DescribeSnapshots`: AMI に関連付けられたスナップショットの詳細情報を取得するため。
 
 上記を満たす IAM ポリシー JSON は以下
 
-```JSON
+```json
 {
-    "Statement": [
-        {
-            "Action": "ec2:CopyImage",
-            "Condition": {
-                "StringEquals": {
-                    "ec2:CopyImageType": "private"
-                }
-            },
-            "Effect": "Allow",
-            "Resource": "*",
-            "Sid": "AllowCopyAMIs"
-        },
-        {
-            "Action": "ec2:ModifyImageAttribute",
-            "Condition": {
-                "StringEquals": {
-                    "ec2:Attribute": "LaunchPermission"
-                }
-            },
-            "Effect": "Allow",
-            "Resource": "*",
-            "Sid": "AllowModifyImageAttributes"
-        },
-        {
-            "Action": [
-                "ec2:DescribeSnapshots",
-                "ec2:DescribeImages",
-                "ec2:DescribeImageAttribute"
-            ],
-            "Effect": "Allow",
-            "Resource": "*",
-            "Sid": "AllowDescribeImagesAndSnapshots"
-        },
-        {
-            "Action": "sts:DecodeAuthorizationMessage",
-            "Effect": "Allow",
-            "Resource": "*",
-            "Sid": "decodepolicy"
+  "Statement": [
+    {
+      "Action": "ec2:CopyImage",
+      "Condition": {
+        "StringEquals": {
+          "ec2:CopyImageType": "private"
         }
-    ],
-    "Version": "2012-10-17"
+      },
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "AllowCopyAMIs"
+    },
+    {
+      "Action": "ec2:ModifyImageAttribute",
+      "Condition": {
+        "StringEquals": {
+          "ec2:Attribute": "LaunchPermission"
+        }
+      },
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "AllowModifyImageAttributes"
+    },
+    {
+      "Action": ["ec2:DescribeSnapshots", "ec2:DescribeImages", "ec2:DescribeImageAttribute"],
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "AllowDescribeImagesAndSnapshots"
+    },
+    {
+      "Action": "sts:DecodeAuthorizationMessage",
+      "Effect": "Allow",
+      "Resource": "*",
+      "Sid": "decodepolicy"
+    }
+  ],
+  "Version": "2012-10-17"
 }
-
 ```
 
-### Terraform でかく
+### Terraform で作成
 
-```tf 
+```tf
 data "aws_iam_policy_document" "allow_ami_permit" {
     version = "2012-10-17"
     statement {
@@ -185,6 +191,3 @@ resource "local_file" "allow_ami_permit_credentials" {
 }
 
 ```
-
-
-

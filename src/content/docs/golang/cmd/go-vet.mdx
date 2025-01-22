@@ -1,0 +1,32 @@
+---
+title: go vet
+description: パッケージ内の潜在的なエラーを報告する
+tags:
+  - "Golang"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: go vet
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 3
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+## go run について
+
+### syntax
+
+```bash frame=none
+go run [build flags] [-exec xprog] package [arguments...]
+```
+
+```bash frame=none
+go run main.go
+```

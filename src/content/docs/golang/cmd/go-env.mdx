@@ -1,0 +1,71 @@
+---
+title: go env
+description: Go 環境変数を表示する
+tags:
+  - "Golang"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: go env
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 3
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+## go env について
+
+```bash frame=none
+go env
+```
+
+実行結果
+
+```bash frame=none
+GO111MODULE=''
+GOARCH='arm64'
+GOBIN=''
+GOCACHE='/Users/t_inoue/Library/Caches/go-build'
+GOENV='/Users/t_inoue/Library/Application Support/go/env'
+GOEXE=''
+GOEXPERIMENT=''
+GOFLAGS=''
+GOHOSTARCH='arm64'
+GOHOSTOS='darwin'
+GOINSECURE=''
+GOMODCACHE='/Users/t_inoue/go/1.21.1/pkg/mod'
+GONOPROXY=''
+GONOSUMDB=''
+GOOS='darwin'
+GOPATH='/Users/t_inoue/go/1.21.1'
+GOPRIVATE=''
+GOPROXY='https://proxy.golang.org,direct'
+GOROOT='/Users/t_inoue/.anyenv/envs/goenv/versions/1.21.1'
+GOSUMDB='sum.golang.org'
+GOTMPDIR=''
+GOTOOLCHAIN='auto'
+GOTOOLDIR='/Users/t_inoue/.anyenv/envs/goenv/versions/1.21.1/pkg/tool/darwin_arm64'
+GOVCS=''
+GOVERSION='go1.21.1'
+GCCGO='gccgo'
+AR='ar'
+CC='clang'
+CXX='clang++'
+CGO_ENABLED='1'
+GOMOD='/dev/null'
+GOWORK=''
+CGO_CFLAGS='-O2 -g'
+CGO_CPPFLAGS=''
+CGO_CXXFLAGS='-O2 -g'
+CGO_FFLAGS='-O2 -g'
+CGO_LDFLAGS='-O2 -g'
+PKG_CONFIG='pkg-config'
+GOGCCFLAGS='-fPIC -arch arm64 -pthread -fno-caret-diagnostics -Qunused-arguments -fmessage-length=0 -ffile-prefix-map=/var/folders/3y/4mh9nbvn0hn7p28vqt1zp2000000gn/T/go-build1591746922=/tmp/go-build -gno-record-gcc-switches -fno-common'
+
+```
