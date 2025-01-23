@@ -73,6 +73,22 @@ export default defineConfig({
                     ],
                 },
                 {
+                    label: 'Go',
+                    collapsed: true,
+                    items: [
+                        {
+                            label: 'Goの基礎',
+                            collapsed: true,
+                            autogenerate: { directory: 'golang/base' },
+                        },
+                        {
+                            label: 'Goコマンド',
+                            collapsed: true,
+                            autogenerate: { directory: 'golang/cmd' },
+                        },
+                    ],
+                },
+                {
                     label: 'Linux',
                     collapsed: true,
                     items: [
