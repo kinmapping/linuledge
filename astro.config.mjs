@@ -73,6 +73,32 @@ export default defineConfig({
                     ],
                 },
                 {
+                    label: 'システム設計',
+                    collapsed: true,
+                    items: [
+                        {
+                            label: 'ウォーターフォールモデル',
+                            collapsed: true,
+                            autogenerate: { directory: 'system-design/waterfall' },
+                        },
+                        {
+                            label: 'アジャイル開発',
+                            collapsed: true,
+                            autogenerate: { directory: 'system-design/agile' },
+                        },
+                        // {
+                        //     label: 'テスト駆動開発',
+                        //     collapsed: true,
+                        //     autogenerate: { directory: 'golang/cmd' },
+                        // },
+                        // {
+                        //     label: 'スクラム開発',
+                        //     collapsed: true,
+                        //     autogenerate: { directory: 'golang/cmd' },
+                        // },
+                    ],
+                },
+                {
                     label: 'Go',
                     collapsed: true,
                     items: [
