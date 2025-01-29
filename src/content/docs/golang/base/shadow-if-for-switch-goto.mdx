@@ -1,0 +1,166 @@
+---
+title: 基礎(ブロック、シャドーイング、制御構造)
+description: Go 言語の基本型についてまとめます
+tags:
+  - "Golang"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+
+  label: 基礎(ブロック、シャドーイング、制御構造)
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 3
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+## ブロックによるスコープの理解
+
+関数や変数の宣言が行われる場所をブロックと呼びます。
+関数の外で宣言された変数、関数、定数、型はパッケージブロックに置かれます。
+`import` 文は他のパッケージをインポートして、そのパッケージ内の識別子を利用できるようにします。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+  // fmt パッケージの Println 関数を呼び出しています。
+  fmt.Println("Hello, World!")
+}
+```
+
+`import` 文によってほかのパッケージからインポートされた識別子はファイルブロックに置かれます。
+関数のトップレベルで宣言された変数、定数、型は関数ブロックに置かれます。ひとつの関数では `{}` でブロックを表します。また、制御構造である、`if` 文や `for` 文、`switch` 文、`goto` 文はブロックを形成し、その内側のブロックでは外側で宣言された変数、定数、型を参照できます。
+
+### 変数のシャドーイング
+
+Go の特殊性で、ブロックの中で外で宣言している識別子と同じ名前の変数、定数、型を宣言すると、外側で宣言された変数、定数、型をシャドーイングします。
+
+```go
+package main
+
+func main() {
+  x := 10
+  {
+    x := 20
+    // ここでは内側の x を参照しています。
+    fmt.Println(x) // 20
+  }
+  // ここでは外側の x を参照しています。
+  // シャドーイングされているため、内側の x は参照できません。
+  fmt.Println(x) // 10
+}
+```
+
+内側で宣言された変数をシャドーイング変数と呼びます。
+パッケージのインポートのシャドーイングも注意しないといけません。
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+  fmt.Println("Hello, World!")
+  fmt := 10
+  fmt.Println(fmt) // fmt.Println undefined (type int has no field or method Println)
+}
+```
+
+fmt がシャドーイングされているため、fmt.Println はエラーになります。
+
+#### シャドーイングを防ぐ
+
+リンターの shadow をインストールすれば、ある程度検出してシャドーイングを防ぐ助けになります。
+
+```bash frame=none
+go install golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow@latest
+```
+
+[`Makefile`](/golang/base/basic/#makefile) に以下を追加します。
+
+```makefile frame=none
+vet:
+  go vet ./...
+  shadow ./...
+.PHONY: vet
+```
+
+shadow コマンドを実行する
+
+```bash frame=none
+shadow xxx.go
+```
+
+:::note
+shadow コマンドは、シャドーイングされている変数、定数、型を検出してエラーを出します。
+パッケージ名を同じ名前の変数でシャドーイングした場合は検出されません。
+:::
+
+:::tip[ユニバースブロック]
+
+Go 言語は小さな言語で、キーワードを 25 個しか持っておりません。
+組み込みの型、パッケージ、関数、定数、変数、型、インターフェース、メソッド、セクションなどはそのキーワードに含まれていません(nil なども)。それらはユニバースブロックに置かれます。
+キーワードではなく、あらかじめ宣言された識別子(predeclared identifiers)として扱われ、ユニバースブロックでこれらを定義して、ほかのすべてのブロックはユニバースブロックに含まれます。
+
+ユニバースブロックで定義されているということは、シャドーイングの対象になるということでもあります。
+
+```go
+fmt.Println(true) // true
+true := 10
+fmt.Println(true) // 10
+```
+
+ユニバースブロックにある識別子を再定義できてしまうので十分注意が必要です。
+
+:::
+
+## if 文
+
+```go
+package main
+
+func main() {
+		score := 100
+		if score > 80 {
+				println("あなたの点数は" + score + "です")
+		}
+}
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
+
+
+func main() {
+	rand.Seed(time.Now().UnixNano()) // シードの指定
+	n := rand.Intn(10) // 0以上10未満の整数を戻す
+	if n == 0 {
+		fmt.Println("少し小さすぎます:", n)
+	} else if n > 5 {
+		fmt.Println("大きすぎます:", n)
+	} else {
+		fmt.Println("いい感じの数字です:", n)
+	}
+}
+```
+
+```go
+if score > 80 {
+  println("あなたの点数は" + score + "です")
+}
+```

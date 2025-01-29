@@ -891,11 +891,103 @@ fmt.Println(v, ok) // 0 false
 
 ### マップからの削除
 
+組み込み関数 delete を使ってマップからキーと値のペアを削除できます。
+
+`delete(map, key)`
+
+```go
+var m = map[string]int{"a": 1, "b": 2}
+delete(m, "a")
+fmt.Println(m) // map[b:2]
+```
+
 ### マップとセット
 
-## 構造体
+セットとは、重複しない要素の集合です。
+ある要素があるセットに含まれるかのチェックは要素数に関わらず高速に行えます。
+マップのキーにセットに含めたい要素を割り当て、値として bool を指定する。
+
+```go showLineNumbers {2, 9-11, 17}
+// キーが int 型で、値が bool 型のマップを宣言
+intSet := map[int]bool{}
+vals := []int{5, 10, 2, 5, 8, 7, 3, 9, 1, 2, 10}
+
+fmt.Println(intSet) // map[]
+fmt.Println(vals) // [5 10 2 5 8 7 3 9 1 2 10]
+
+// vals の要素を マップ型の intSet に追加
+for _, v := range vals {
+	intSet[v] = true
+}
+// することで、map 型の キーを重複しない特徴を活かし、vals の要素を重複なく intSet に追加できます。
+
+fmt.Println(intSet) // map[1:true 2:true 3:true 5:true 7:true 8:true 9:true 10:true]
+fmt.Println(vals) // [5 10 2 5 8 7 3 9 1 2 10]
+
+fmt.Println(len(vals), len(intSet)) // 11 8 // intSet のキーに重複がなくなります。
+fmt.Println(intSet[5])  // true
+fmt.Println(intSet[500])  // false
+
+// 100 は intSet に含まれていないので false が返されます。
+if intSet[100] {
+	fmt.Println("100は含まれている")
+}
+
+if intSet[10] {
+	fmt.Println("10は含まれている") // 10は含まれている
+}
+```
+
+<Steps>
+
+1. intSet に vals の集合をセットしていきます。集合をセットする intSet は map 型です。
+1. `for-range` を使って vals の要素を intSet に追加していきます。map 型のキーは重複しない特徴を活かし、vals の要素を重複なく intSet に追加できます。
+1. 17 行目で intSet のキーに重複がないことが確認できます。vals には 11 個の要素がありますが、intSet のキーは 8 個です。
+1. 以降の処理では、intSet の集合にセットされた要素の確認をしています。
+
+</Steps>
+
+他にも和集合、差集合、積集合などの集合演算を行いたい場合は、自作で処理を作成するかサードパーティのライブラリを使うことで実現できます。
+集合を実装するためにマップを使うと真偽値をペアで利用するため、1 バイトのメモリを消費します。
+しかし、struct を使うことで、メモリを消費しないように集合を実装できます。
+一方、コードの可読性がなくなるため、大きな集合を扱うのでなければメモリ使用量の少なさを優先するという選択もあります。
+
+```go
+intSet := map[int]struct{}{}
+vals := []int{5, 10, 2, 5, 8, 7, 3, 9, 1, 2, 10}
+
+for _, v := range vals {
+	intSet[v] = struct{}{} // 空の構造体をセット
+}
+
+if _, ok := intSet[5]; ok {
+	fmt.Println("5は含まれている")
+}
+
+if _, ok := intSet[500]; ok {
+	fmt.Println("500は含まれている")
+}
+```
+
+どちらにせよ、map 型のキーは重複しない特徴を活かし、集合を実装できます。
+
+## struct 構造体
 
 マップではキーと値の型で、個別に値の型を指定することができません。宣言したマップの方はすべておなじキーと値の型を持っていなければなりません。それを解決するためには、構造体を使うことで個別に型を指定できます。
+
+```go
+type 構造体名 struct {
+  フィールド名 型
+  // 構造体のフィールドは `,` なしで宣言します。
+}
+
+// 構造体を宣言したら、それを型として変数を宣言できます。
+var 変数名 構造体名
+
+
+```
+
+構造体のフィールドは、パブリックでもプライベートでも構いません。
 
 ```go
 type person struct {
@@ -909,6 +1001,38 @@ p.name = "John"
 p.age = 30
 p.pet = "dog"
 fmt.Println(p) // {John 30 dog}
+
+// 構造体のフィールドをゼロ値で初期化した後、フィールドに値をセットできます。
+bob := person{}
+bob.name = "Bob"
+bob.age = 25
+bob.pet = "cat"
+fmt.Println(bob) // {Bob 25 cat}
+
+// 構造体リテラルを使って、フィールドに値をセットできます。
+alice := person{
+  name: "Alice",
+  age: 20,
+  pet: "dog",
+}
+fmt.Println(alice) // {Alice 20 dog}
+
+julia := person{
+  30,
+  "Julia",
+  "cat",
+}
+fmt.Println(julia) // {Julia 30 }
+
+// 構造体リテラルを使って、フィールドに値をセットできます。
+// フィールドの数が不足しているとエラーになります。
+// too few values in struct literal of type person
+// tetsu := person{
+//   "Tetsu",
+//   30,
+// }
+// fmt.Println(tetsu) // {Tetsu 30 }
+
 ```
 
 :::note[構造体]
@@ -920,5 +1044,161 @@ fmt.Println(p) // {John 30 dog}
 型・メソッド・インターフェースを使ってオブジェクト指向言語のような機能を実現できます。
 
 :::
+
+構造体へのアクセスには、ドット演算子を使います。
+
+```go
+type person struct {
+    name string
+    age int
+    pet string
+}
+
+var p person
+p.name = "John"
+
+fmt.Println(p.name) // John
+```
+
+### 無名構造体
+
+type キーワードを利用せずに構造体を宣言できます。
+変数に対して無名構造体という名前のない構造体を宣言します。
+型としての再利用性を考えずに、一時的にデータを格納するための構造体を宣言するのに便利です。
+
+```go
+var person struct {
+  name string
+  age int
+  pet string
+}
+
+person.name = "John"
+person.age = 30
+person.pet = "dog"
+fmt.Println(person) // {John 30 dog}
+
+pet := struct {
+  name string
+  kind string
+}{
+  name: "ポチ",
+  kind: "dog",
+}
+fmt.Println(pet) // {ポチ dog}
+```
+
+用途としては以下のような方法があります。
+
+- JSON などの外部データを構造体に変換したり、構造体を JSON などの外部データに変換する
+- データベースのレコードを構造体に変換したり、構造体をデータベースのレコードに変換する
+
+:::note[アンマーシャル・マーシャル ]
+
+アンマーシャル(Unmarshal)は外部データを構造体に変換することを指します。
+マーシャル(Marshal)は構造体を外部データに変換することを指します。
+:::
+
+```go
+package main
+
+import (
+    "encoding/json" //  JSONのエンコードとデコードに使用
+    "fmt" // フォーマット出力に使用
+    "io/ioutil" // ファイル読み込みに使用(レスポンスのボディを読み取るために使用)
+    "net/http" // HTTPクライアントの作成に使用
+    "log" // ログ出力に使用
+)
+
+// Post は取得するJSONデータの構造に対応する構造体です。
+// JSONのフィールドとGoの構造体フィールドを対応付けるためにタグを使用しています。
+type Post struct {
+    UserID int    `json:"userId"`
+    ID     int    `json:"id"`
+    Title  string `json:"title"`
+    Body   string `json:"body"`
+}
+
+func main() {
+    // 外部APIのURL
+    url := "https://jsonplaceholder.typicode.com/posts/1"
+
+    // HTTP GETリクエストを送信し、レスポンスを取得
+    resp, err := http.Get(url)
+    if err != nil {
+        log.Fatalf("HTTPリクエストエラー: %v", err)
+    }
+    defer resp.Body.Close()
+
+    // レスポンスボディを読み取り
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        log.Fatalf("レスポンス読み取りエラー: %v", err)
+    }
+
+    // JSONデータを構造体にデコード
+    var post Post
+    err = json.Unmarshal(body, &post)
+    if err != nil {
+        log.Fatalf("JSONデコードエラー: %v", err)
+    }
+
+    // デコードしたデータを出力
+    fmt.Printf("Post Details:\n")
+    fmt.Printf("UserID: %d\n", post.UserID)
+    fmt.Printf("ID: %d\n", post.ID)
+    fmt.Printf("Title: %s\n", post.Title)
+    fmt.Printf("Body: %s\n", post.Body)
+}
+
+```
+
+実行結果
+
+```txt
+Post Details:
+UserID: 1
+ID: 1
+Title: sunt aut facere repellat provident occaecati excepturi optio reprehenderit
+Body: quia et suscipit
+suscipit recusandae consequuntur expedita et cum
+reprehenderit molestiae ut ut quas totam
+nostrum rerum est autem sunt rem eveniet architecto
+```
+
+### 構造体の比較・変換
+
+構造体同士のすべてのフィールドが比較可能な型である場合は、構造体同士を比較できます。
+フィールドにスライスやマップがある場合は比較できません。
+構造体のフィールドが、名前、順番、型のすべてが同じ場合に比較できます。
+
+```go
+type person struct {
+    name string
+    age int
+    pet string
+}
+
+var p1 person
+var p2 person
+
+var p3 struct {
+  name string
+  age int
+  pet string
+}
+
+type personOther struct {
+    name string
+    age int
+    pet string
+}
+
+var p4 personOther
+
+fmt.Println(p1 == p2) // true
+fmt.Println(p1 == p3) // true
+fmt.Println(p1 == p4) // true
+```
 
 ## インターフェース

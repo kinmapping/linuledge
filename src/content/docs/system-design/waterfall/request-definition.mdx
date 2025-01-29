@@ -3,7 +3,6 @@ title: 要件定義
 description: 要件定義
 tags:
   - "システム設計"
-  - "ウォーターフォール"
 sidebar:
   # このリンクのカスタムラベルを設定します
   label: 要件定義
@@ -11,16 +10,14 @@ sidebar:
   order: 4
 ---
 
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
 ## 要件定義
 
 システム開発の流れとしてウォーターフォールモデルを採用している場合、要件定義はシステム開発の最初のフェーズです。
-
-```mermaid
-graph TD;
-    A[要件定義] --> B[要件分析]
-    B --> C[要件定義]
-    C --> D[要件検証]
-```
 
 ### 要件定義の目的
 

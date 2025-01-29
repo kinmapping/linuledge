@@ -77,25 +77,20 @@ export default defineConfig({
                     collapsed: true,
                     items: [
                         {
-                            label: 'ウォーターフォールモデル',
-                            collapsed: true,
-                            autogenerate: { directory: 'system-design/waterfall' },
-                        },
-                        {
                             label: 'アジャイル開発',
                             collapsed: true,
                             autogenerate: { directory: 'system-design/agile' },
                         },
-                        // {
-                        //     label: 'テスト駆動開発',
-                        //     collapsed: true,
-                        //     autogenerate: { directory: 'golang/cmd' },
-                        // },
-                        // {
-                        //     label: 'スクラム開発',
-                        //     collapsed: true,
-                        //     autogenerate: { directory: 'golang/cmd' },
-                        // },
+                        {
+                            label: 'ウォーターフォール',
+                            collapsed: true,
+                            autogenerate: { directory: 'system-design/waterfall' },
+                        },
+                        {
+                            label: 'テスト駆動開発',
+                            collapsed: true,
+                            autogenerate: { directory: 'system-design/tdd' },
+                        },
                     ],
                 },
                 {
