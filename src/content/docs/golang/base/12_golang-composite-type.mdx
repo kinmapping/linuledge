@@ -7,7 +7,7 @@ sidebar:
   # このリンクのカスタムラベルを設定します
   label: 合成型(複合型)
   # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
-  order: 3
+  order: 12
   # このリンクにバッジを追加します
   # badge:
   #     text: ""
@@ -21,7 +21,7 @@ import Table from "@components/Table.astro";
 
 ## 配列
 
-Go 言語にも配列がありますが、ほかの言語と使い、直接使うことはありません。
+Go 言語にも配列がありますが、ほかの言語と使い、直接使うことはありません。それは、後から要素数を追加することができないためです。ほかのプログラミング言語と同じような可変長配列は[スライス](/golang/base/golang-composite-type/#スライス)と呼ばれます。
 
 ゼロ値: `nil`
 
@@ -47,6 +47,8 @@ var x = [12]int{1, 5: 4, 6, 10: 100, 15}
 
 ### `...` を利用した初期化
 
+`...` を利用した初期化は、要素数を省略して、要素数を自動で決定します。
+
 ```go
 var x = [...]int{1, 2, 3}
 // 要素数 3 の int 型の配列 [1, 2, 3]
@@ -54,17 +56,27 @@ var x = [...]int{1, 2, 3}
 // 配列の同士の比較
 var y = [3]int{1, 2, 3}
 
-x == y // true
-x != y // false
+fmt.Printf("%T\n", x) // [3]int
+fmt.Printf("%T\n", y) // [3]int
+
+fmt.Println(x == y) // true
+fmt.Println(x != y) // false
 ```
 
 ### 配列の要素に値を代入
 
+`配列[index] = 値` として、要素に値を代入できます。
+
 ```go
 var x = [3]int{1, 2, 3}
+
+fmt.Println(x) // [1 2 3]
+
 x[0] = 10
 x[1] = 20
 x[2] = 30
+
+fmt.Println(x) // [10 20 30]
 ```
 
 最後の要素を超えるインデックスを指定したり、インデックスとして負の値を指定したりはできません。
@@ -573,6 +585,8 @@ fmt.Println(copy(target, source)) // 2
 
 コードポイントとは、文字列の中の一つの文字を表す数値です。Go では、文字列は UTF-8 エンコードで保存されており、ASCII 文字は 1 バイトで表現されます。例えば、H の ASCII コードは 72 です。
 
+<LinkPreview url="https://ja.wikipedia.org/wiki/ASCII" type="inline" />
+
 :::
 
 コードポイントで取得するのではなく文字を取得するには、`[n:m]` で部分配列を抽出することで文字列を取得できます。
@@ -673,7 +687,9 @@ var s string = string(a)
 var b byte = 'y'
 var s2 string = string(b)
 
-fmt.Println(s) // x
+fmt.Println(a)  // 120
+fmt.Println(s)  // x
+fmt.Println(b)  // 121
 fmt.Println(s2) // y
 ```
 

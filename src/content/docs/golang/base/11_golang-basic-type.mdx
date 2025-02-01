@@ -7,7 +7,7 @@ sidebar:
   # このリンクのカスタムラベルを設定します
   label: 基本型
   # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
-  order: 3
+  order: 11
   # このリンクにバッジを追加します
   # badge:
   #     text: ""
@@ -201,6 +201,8 @@ r := 'A'  // rune型の変数
 
 `byte` は `uint8`型のエイリアスで、主に ASCII 文字などの単一バイトの文字を扱います。一方、`rune` は 32 ビット幅を持ち、より多くの文字を表現することが可能です。
 
+[文字列 rune byte の変換](/golang/base/golang-composite-type/#文字列-rune-byte-の変換)
+
 ```go
 'a'
 'あ'
@@ -237,10 +239,17 @@ rune リテラルについては、コードがわかりやすくなるという
 
 ```go
 // 改行を含める
-`Hello,\nWorld!`
+fmt.Println(`Hello,\nWorld!`)
+
+// fmt.Println arg list ends with redundant newline
+fmt.Println(`Hello,
+  World!
+    Goodbye!
+      Farewell!
+`)
 
 // 「"」を含める
-`このようにダブルクォートで囲んだ "Hello, World!" も使うことができます。`
+fmt.Println(`このようにダブルクォートで囲んだ "Hello, World!" も使うことができます。`)
 ```
 
 :::note[UTF-8]
@@ -290,7 +299,7 @@ var b byte = 1000 // コンパイルエラー
 ### 論理型 bool
 
 真偽値 (論理型、ブール値) を値としてもつ変数の型は論理型になります。
-論理型の変数は true、または false のいずれかの値をとります。
+論理型の変数は true、または false のいずれかの値をとります。論理型は 1 バイトのサイズを持ちます。
 
 ゼロ値: false
 
@@ -323,6 +332,31 @@ Go 言語で整数を表す型には、符号付き整数と符号なし整数�
     ["uint64", "8 バイト", "0 ~ 18446744073709551615"],
   ]}
 />
+
+uint 型は符号がないため、負の数を表現できません。
+
+int 型で違う型同士での演算ができません
+
+```go
+var a int = 1
+var b uint8 = 2
+
+a + b // invalid operation: a + b (mismatched types int and uint8)
+```
+
+そのため、変数の型がわからなくなってしまった場合、
+型を確認して型変換を行い演算をできるようにしてみます。
+
+```go
+var a int = 1
+var b uint8 = 2
+
+// %T で型を表示してくれる
+fmt.Printf("%T\n", b) // unit8
+fmt.Printf("%T\n", int(b)) // int
+
+fmt.Println(a + int(b)) // 3
+```
 
 ##### 整数型の呼び方
 
@@ -469,6 +503,26 @@ Go 言語の浮動小数点数型は、IEEE 754 標準に準拠しています�
     ["float64", "8 バイト", "-1.7976931348623157e+308 ~ 1.7976931348623157e+308"],
   ]}
 />
+
+```go
+var f float64 = 123.456
+fmt.Println(f) // 123.456
+
+f2 := 789.1011
+fmt.Println(f2) // 789.1011
+
+fmt.Printf("%T, %T\n", f, f2) // float64, float64
+
+fmt.Println(f + f2) // 912.5571
+
+var fl32 float32 = 789.1011
+fmt.Printf("%T\n", fl32) // float32
+
+//fmt.Println(f + fl32) // invalid operation: f + fl32 (mismatched types float64 and float32)
+
+// 型変換を行うことで演算ができるようになる
+fmt.Println(f + float64(fl32)) // 912.55707421875
+```
 
 浮動小数点数リテラルのデフォルトの型も float64 です。特になにも考慮事項がない場合は float64 を使うのがよいでしょう。
 float32 は 10 進数で 6 ~ 7 桁の精度を持ち、float64 は 15 ~ 16 桁の精度を持ちます。
