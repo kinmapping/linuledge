@@ -2,29 +2,29 @@
 title: Markdown でのコンテンツ作成
 description: Markdown での書き方を紹介
 tags:
-    - "Astro"
+  - "Astro"
 sidebar:
-    # このリンクのカスタムラベルを設定します
-    label: Markdown でのコンテンツ作成
-    # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
-    order: 1
-    # このリンクにバッジを追加します
-    # badge:
-    #     text: ""
-    #     variant: tip
+  # このリンクのカスタムラベルを設定します
+  label: Markdown でのコンテンツ作成
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 1
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
 ---
 
 ## インラインスタイル
 
 ```md
--   **bold テキスト**
--   _イタリック_
--   ~~打ち消し線~~
+- **bold テキスト**
+- _イタリック_
+- ~~打ち消し線~~
 ```
 
--   **bold テキスト**
--   _イタリック_
--   ~~打ち消し線~~
+- **bold テキスト**
+- _イタリック_
+- ~~打ち消し線~~
 
 [リンク](https://starlight.astro.build/ja/guides/authoring-content/)
 
@@ -97,8 +97,8 @@ danger です
 // lang.js
 // シンタックスハイライトされたJavascriptコード。
 var fun = function lang(l) {
-    dateformat.i18n = require("./lang/" + l);
-    return true;
+  dateformat.i18n = require("./lang/" + l);
+  return true;
 };
 ```
 
@@ -141,17 +141,17 @@ var fun = function lang(l) {
 
 #### 挿入と削除のラインマーカー
 
--   `del{2}` …削除行(赤色)
--   `ins={3-4}` …追加行(緑色)
--   `{6}` …普通のラインマーカー(青)
+- `del{2}` …削除行(赤色)
+- `ins={3-4}` …追加行(緑色)
+- `{6}` …普通のラインマーカー(青)
 
 ```js title="line-markers.js" del={2} ins={3-4} {6}
 function demo() {
-    console.log("this line is marked as deleted");
-    // This line and the next one are marked as inserted
-    console.log("this is the second inserted line");
+  console.log("this line is marked as deleted");
+  // This line and the next one are marked as inserted
+  console.log("this is the second inserted line");
 
-    return "this line uses the neutral default marker type";
+  return "this line uses the neutral default marker type";
 }
 ```
 
@@ -163,7 +163,7 @@ function demo() {
 ```jsx {"1":5} del={"2":7-8} ins={"labeltext":10-13}
 // labeled-line-markers.jsx
 <button role="button" {...props} value={value} className={buttonClassName} disabled={disabled} active={active}>
-    {children && !active && (typeof children === "string" ? <span>{children}</span> : children)}
+  {children && !active && (typeof children === "string" ? <span>{children}</span> : children)}
 </button>
 ```
 
@@ -238,9 +238,9 @@ echo "Test" > /home/test.txt
 
 ```js "return true;" ins="inserted" del="deleted"
 function demo() {
-    console.log("These are inserted and deleted marker types");
-    // The return statement uses the default marker type
-    return true;
+  console.log("These are inserted and deleted marker types");
+  // The return statement uses the default marker type
+  return true;
 }
 ```
 
@@ -251,14 +251,14 @@ function demo() {
 ```js wrap title="折り返し"
 // Example with wrap
 function getLongString() {
-    return "This is a very long string that will most probably not fit into the available space unless the container is extremely wide";
+  return "This is a very long string that will most probably not fit into the available space unless the container is extremely wide";
 }
 ```
 
 ```js wrap=false title="折り返しなし"
 // Example with wrap=false
 function getLongString() {
-    return "This is a very long string that will most probably not fit into the available space unless the container is extremely wide";
+  return "This is a very long string that will most probably not fit into the available space unless the container is extremely wide";
 }
 ```
 
@@ -302,14 +302,14 @@ import starlight from "@astrojs/starlight";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 
 export default defineConfig({
-    integrations: [
-        starlight({
-            title: "My Starlight site",
-            expressiveCode: {
-                plugins: [pluginCollapsibleSections()],
-            },
-        }),
-    ],
+  integrations: [
+    starlight({
+      title: "My Starlight site",
+      expressiveCode: {
+        plugins: [pluginCollapsibleSections()],
+      },
+    }),
+  ],
 });
 ```
 
@@ -338,10 +338,10 @@ const engine = someBoilerplateEngine(evenMoreBoilerplate());
 engine.doSomething(1, 2, 3, calcFn);
 
 function calcFn() {
-    // You can have multiple collapsed sections
-    const a = 1;
-    const b = 2;
-    return a + b;
+  // You can have multiple collapsed sections
+  const a = 1;
+  const b = 2;
+  return a + b;
 }
 ```
 
@@ -363,18 +363,18 @@ import starlight from "@astrojs/starlight";
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
 
 export default defineConfig({
-    integrations: [
-        starlight({
-            title: "My Starlight site",
-            expressiveCode: {
-                plugins: [pluginLineNumbers()],
-            },
-        }),
-    ],
+  integrations: [
+    starlight({
+      title: "My Starlight site",
+      expressiveCode: {
+        plugins: [pluginLineNumbers()],
+      },
+    }),
+  ],
 });
 ```
 
-#### showLineNubers
+#### showLineNumbers
 
 行番号表示: `showLineNumbers`, `showLineNumbers=true`
 

@@ -1,0 +1,88 @@
+---
+title: go run
+description: パッケージを実行する
+tags:
+  - "Golang"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: go run
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 3
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+## go run について
+
+### syntax
+
+```bash frame=none
+go run [build flags] [-exec xprog] package [arguments...]
+```
+
+```bash frame=none
+go run main.go
+```
+
+Run は指定された main Go パッケージをコンパイルして実行します。
+通常、パッケージは単一ディレクトリからの `xxxx.go` ソースファイルのリストとして指定されます。
+インポートパス、ファイルシステムパス、または単一の既知のパッケージにマッチするパターンとして指定して実行することができる。
+
+```bash frame=none
+go run .
+
+go run my/cmd
+```
+
+### go run の動き
+
+Go はパッケージをコンパイルして実行するため、コンパイル結果のバイナリファイルがあると思われます。しかし、go run はコンパイル結果のバイナリファイルを生成しません。それは裏側で以下のような処理手順を行っているからです。
+
+<Steps>
+
+1. `go run` でパッケージをコンパイルしてバイナリファイルを生成・ビルドされ一時ディレクトリに配置されます。
+1. バイナリファイルを実行
+1. バイナリファイルを実行し、プログラムが終了するとバイナリファイルが削除される
+
+</Steps>
+
+:::tip
+
+`go run` を使うことで Go のプログラムをインタプリタ言語のスクリプトのように扱うことができます。
+表面上は、ソースコードを直接実行しているのと同じように見えます。
+
+:::
+
+### パッケージ引数にバージョンサフィックスが付いている場合
+
+パッケージ引数にバージョンサフィックス（@latest や@v1.0.0 など）が付いている場合、
+`go run` はモジュール対応モードでプログラムをビルドし、
+現在のディレクトリやその親ディレクトリにある go.mod ファイルを無視します。
+これは、メインモジュールの依存関係に影響を与えずにプログラムを実行するのに便利です。
+
+パッケージ引数にバージョンサフィックスがない場合、`go run` は GO111MODULE 環境変数と go.mod ファイルの存在に応じて、
+モジュール対応モードまたは GOPATH モードで実行されることがあります。
+詳細は `go help modules` を参照してください。モジュール対応モードが有効な場合、`go run` はメインモジュールのコンテキストで実行されます。
+
+デフォルトでは、`go run`はコンパイルされたバイナリを直接実行します: `a.out arguments...`。
+`-exec` フラグが指定された場合、`go run`は xprog を使用してバイナリを呼び出します:
+`xprog a.out arguments...`。
+`-exec` フラグが指定されていない場合、GOOS または GOARCH がシステムのデフォルトと異なり、現在の検索パスに `go_$GOOS_$GOARCH_exec` という名前のプログラムが存在する場合、`go run` はそのプログラムを使用してバイナリを実行します。
+例えば `go_js_wasm_exec a.out arguments...` のようになります。これは、シミュレータや他の実行方法が利用可能な場合に、クロスコンパイルされたプログラムを実行することを可能にします。
+
+デフォルトでは、`go run`はデバッガーによって使用される情報を生成せずにバイナリをコンパイルし、ビルド時間を短縮します。
+デバッガー情報をバイナリに含めるには、`go build`を使用します。
+
+Run の終了ステータスは、コンパイルされたバイナリの終了ステータスではありません。
+
+ビルドフラグの詳細については、`go help build`を参照してください。
+パッケージ指定の詳細については、`go help packages`を参照してください。
+
+関連コマンド: `go build`.

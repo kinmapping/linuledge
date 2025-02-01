@@ -73,6 +73,43 @@ export default defineConfig({
                     ],
                 },
                 {
+                    label: 'システム設計',
+                    collapsed: true,
+                    items: [
+                        {
+                            label: 'アジャイル開発',
+                            collapsed: true,
+                            autogenerate: { directory: 'system-design/agile' },
+                        },
+                        {
+                            label: 'ウォーターフォール',
+                            collapsed: true,
+                            autogenerate: { directory: 'system-design/waterfall' },
+                        },
+                        {
+                            label: 'テスト駆動開発',
+                            collapsed: true,
+                            autogenerate: { directory: 'system-design/tdd' },
+                        },
+                    ],
+                },
+                {
+                    label: 'Go',
+                    collapsed: true,
+                    items: [
+                        {
+                            label: 'Goの基礎',
+                            collapsed: true,
+                            autogenerate: { directory: 'golang/base' },
+                        },
+                        {
+                            label: 'Goコマンド',
+                            collapsed: true,
+                            autogenerate: { directory: 'golang/cmd' },
+                        },
+                    ],
+                },
+                {
                     label: 'Linux',
                     collapsed: true,
                     items: [

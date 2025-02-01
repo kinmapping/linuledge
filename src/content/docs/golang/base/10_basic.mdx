@@ -1,0 +1,466 @@
+---
+title: Go 導入
+description: Go 言語の導入方法
+tags:
+  - "Golang"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: Go 導入
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 10
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+## Go 言語とは
+
+Go は、Google が開発したプログラミング言語。文法がシンプル、学びやすく、実行速度が早いのが特徴。開発速度が重要なスタートアップから大規模なシステム開発まで、さまざまな開発現場で利用が増えてきている言語。
+
+<LinkPreview url="https://github.com/mushahiroyuki/lgo" title="初めてのGo言語" />
+
+### 開発環境の構築
+
+<Tabs syncKey="install-go">
+  <TabItem label="brew">
+    #### Homebrew でインストール(macOS など)
+    <LinkPreview url="https://brew.sh/index_ja" />
+
+    ```bash frame=none
+    brew install go
+    ```
+
+  </TabItem>
+
+  <TabItem label="goenv">
+    #### anyenv > goenv で管理してインストール
+
+    <Steps>
+
+      1. バージョン管理ツールの anyenv から goenv をインストール
+
+          ```bash frame=none
+          anyenv install --list # これで、goenv の存在を確認する
+
+          anyenv install goenv # goenv をインストール
+
+          exec $SHELL -l  # 起動中の Shell ウィンドウで再起動
+
+          goenv -v  # インストールした goenv のバージョンを表示
+          ```
+
+      1. goenv で Go のバージョンをインストール
+
+          ```bash frame=none
+          goenv install --help
+          # goenv install のオプションを表示
+
+          goenv install -l # インストールしたい go のバージョンを確認
+
+          goenv install 1.21.1
+
+          go version
+          # 以下のようにまだセットしていない
+          # goenv: 'go' command not found
+          #
+          # The 'go' command exists in these Go versions:
+          #   1.21.1
+
+          goenv global 1.21.1
+          go version
+          # go version go1.21.1 darwin/arm64
+
+          # 指定のプロジェクト内で go のバージョンを変更
+          goenv local バージョン番号
+
+          go env
+          # go で利用する環境変数を一覧表示
+          ```
+
+    </Steps>
+
+  </TabItem>
+
+</Tabs>
+
+<LinkPreview url="https://zenn.dev/salvage0707/articles/go-settings-for-mac-2020-06" />
+
+### マルチプラットフォーム
+
+Go は、マルチプラットフォーム対応の言語です。異なる OS やアーキテクチャーでも同じコードを実行できます。それを実現するものがクロスコンパイルです。開発者は一つのソースコードから、それぞれのプラットフォームに応じたバイナリを生成できます。
+
+例えば、windows 環境でビルド(ソースコードのコンパイル)をする場合は以下のようになります。
+
+```bash frame=none
+go build -o hello.exe hello.go
+```
+
+ビルドに成功すると同じ
+ディレクトリに実行ファイルが生成されます。
+他にも Linux 環境を指定して、コンパイルを行うには
+
+```bash frame=none
+GOOS=linux GOARCH=amd64 go build -o main main.go
+```
+
+## チュートリアル
+
+[go コマンドについて](/golang/cmd/index)
+
+### main パッケージの作成
+
+まず、Go を実行するプログラムのエントリーポイントを作成します。それが、main パッケージです。エントリーポイントとは、プログラムの開始地点のことです。
+main パッケージ内の main 関数がプログラムの開始地点となります。以下のように mani.go というファイルを作成します。
+
+```go title="mani.go"
+// パッケージ宣言
+// このファイルが実行可能なプログラムのエントリーポイントであることを宣言
+package main
+
+// main 関数は、プログラムの開始地点
+func main() {}
+```
+
+main パッケージが存在することで、Go コンパイラは実行可能なバイナリを生成します。ライブラリとして使用されるパッケージには main パッケージは含まれません。
+main パッケージは、他の自作パッケージや標準ライブラリパッケージをインポートして機能を拡張することができます。ひとつのファイルの中で、package は一つしか宣言できません。
+
+#### mani.go を実行
+
+```go title="mani.go"
+package main
+
+// 出力用の 標準パッケージである fmt パッケージをインポート
+import "fmt"
+
+// HelloWorld
+
+func main() {
+	fmt.Println("Hello World")
+}
+
+```
+
+コンパイルを実行する
+
+```bash frame=none
+go run mani.go
+```
+
+<LinkPreview url="https://pkg.go.dev/fmt" />
+
+標準パッケージについては、[Go 公式ドキュメント](https://pkg.go.dev/std) を参照してください。
+
+複数のパッケージをインポートして利用するには
+
+```go
+import (
+	"fmt"
+	"os"
+)
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+// HelloWorld
+
+func main() {
+	fmt.Println("Hello World")
+	fmt.Println(time.Now())
+}
+```
+
+```bash frame=none
+go run main.go
+Hello World
+2025-01-16 21:54:48.105418 +0900 JST m=+0.000483334
+```
+
+:::note[コンパイル]
+Go はネイティブコードにコンパイルされた上で実行される。
+一般的なスクリプト言語の実行速度より 10 ~ 100 倍早いとされる。
+:::
+
+## コードを綺麗にたもつ
+
+### コードのフォーマット
+
+<LinkPreview url="https://zenn.dev/kawaz/articles/go-code-format" title="Go 言語のコードフォーマット" />
+
+Go は "コードを効率的に書ける言語を作る" ということを目的に作られています。
+単純な構文でコンパイルが高速にできるということを意味します。この発想がコードのフォーマットについても検討を重ねることに繋がります。多くの言語ではコードのフォーマットに自由な部分があり、フォーマットに標準を定めることで、ソースコードの処理するツールもシンプルに実装でき、コンパイラは単純となります。
+
+これはフォーマット論争にもコストをかけることがなくなります。
+標準が定義しているもので、
+
+- インデントはタブを使う
+- 行の終わりは改行を使う
+- ブロックの終わりは空行を使う
+- 関数名と同じ行に `{` を使う
+
+などがあります。
+
+`go fmt` コマンドでコードを標準の形式にフォーマットしてくれます。
+
+```bash frame=none
+go fmt main.go
+```
+
+また、`go fmt` の強化版で、`goimports` というツールもあり、フォーマットだけでなく import 文をクリーンに保つのに使えたりします。(import ブロック内のソートや不要な import の削除、推測して追加など)
+
+### コードのリントチェック
+
+<LinkPreview url="https://go.dev/doc/effective_go" title="Effective Go" />
+<LinkPreview url="https://github.com/golang/go/wiki/CodeReviewComments" title="Go Code Review Comments" />
+
+コードフォーマットは、言語のイディオムを保つために必要です。しかし、コードフォーマットだけではコードの品質を保証できません。コードのリントチェックの一つに staticcheck というツールがあります。
+
+<LinkPreview url="https://staticcheck.io/" title="staticcheck" />
+リンターはコードのスタイルがガイドラインに沿っているかをチェックします。
+
+- 変数の命名方法
+- エラーメッセージのフォーマット
+- パブリックなメソッドや型の指摘
+- メソッドの引数の順番
+- メソッドの返り値の順番
+- メソッドの引数の順番
+- メソッドの返り値の順番
+
+リンターが 100 % 正しいとは限りません。そのため、リンターの結果を鵜呑みにしないように注意してください。また、リンターに指摘されていたとしても修正不要なケースもあります。Go 言語の開発者はコードが所定の方式と規則に則っていることを重視しています。
+
+<Steps>
+
+1. staticcheck をインストール
+
+   ```bash frame=none
+   go install honnef.co/go/tools/cmd/staticcheck@latest
+   ```
+
+1. staticcheck を実行
+
+   ```bash frame=none
+   staticcheck main.go
+   ```
+
+</Steps>
+
+go.mod ファイルがあるディレクトリであれば、ファイルを指定せずにチェックを行うことができる。
+
+```bash frame=none
+staticcheck
+```
+
+また `go vet` コマンドでは、コードのバグをチェックしてくれます。メソッドに渡す引数の数を間違えたり、使われない変数に値を代入したりといったものです。
+
+```bash frame=none
+go vet main.go
+
+# .mod ファイルがあれば
+go vet
+```
+
+この他にコードのスタイルチェックで潜在的なバグを見つけてくれるサードバーティツールもあります。
+こうしたツールを複数入れて実行しているとそれぞれのツールがソースを解析することになり、かなりの時間がかかってしまいます。
+別々のツールを使うのではなく、golangci-lint というツールを使うことをおすすめします。
+
+<LinkPreview url="https://golangci-lint.run/" title="golangci-lint" />
+
+複数のリントツールを一緒に実行でき、staticcheck や go vet 、そのほかのツールを一緒に実行できます。
+
+[インストール](https://golangci-lint.run/welcome/install/)
+
+<Steps>
+
+1. golangci-lint をインストール
+
+   ```bash frame=none
+   go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+   ```
+
+1. golangci-lint を実行
+
+   ```bash frame=none
+   golangci-lint run
+   ```
+
+</Steps>
+
+golangci-lint は、多くのツールを実行するので、指摘に同意しかねるケースもでてくることがあります。
+どのリンターを実行し、どのファイルを分析するかは、プロジェクトのルートに置かれた `.golangci.yml` ファイルで設定できます。
+
+<LinkPreview url="https://golangci-lint.run/usage/configuration/" title="golangci-lint の設定" />
+
+たとえば、ビルドプロセスに go vet を含め、コードのレビュープロセスに staticcheck を含めるように設定できます。
+
+```yaml
+linters:
+  disable-all: true
+  enable:
+    - govet
+    - staticcheck
+```
+
+:::tip[リントの設定を策定する]
+golint と go vet を開発プロセスの一部にして、一般的なバグはイディオム的でないコードを避けるようにしましょう。
+ただし、golangci-lint を使っている場合は、徹底したいと考えているルールについてチームメンバーの同意を得ましょう。
+:::
+
+## Go Playground
+
+<LinkPreview url="https://play.golang.org/" title="Go Playground" />
+
+Go Playground は、Go 言語のコードを実行できるオンラインサービスです。インストールの必要がなく、ブラウザだけでコードを実行できます。プログラムを入力して Run ボタンを押すと、コードが実行され、結果が表示されます。
+
+```go
+// You can edit this code!
+// Click here and start typing.
+package main
+
+func main() {
+	Bar()
+}
+-- filename.go --
+package main
+
+import "fmt"
+
+func Bar() {
+	fmt.Println("Hello, Bar からの世界")
+}
+```
+
+`-- filename.go --` として区切ると複数のファイルを利用しているかのように実行できる。
+
+Go Playground は、コードを実行するだけでなく、コードをテストしたり、コードを共有したりするのにも便利です。
+
+- ネットワーク接続はできない
+- 長時間実行されるプロセス、メモリを大量に消費するプロセスは停止される
+- 時刻は、2009-11-10 23:00:00 +0000 UTC m=+0.000000001 に設定されているため、時刻を利用した処理には向かない
+
+Share ボタンを押すと、コードを共有できます。Google のサーバーに保存され、共有された URL にアクセスできる人には誰でもその内容を確認できてしまう。
+誤って、個人情報などのプライバシーに関わる情報を共有してしまった場合は、 security@golang.org に URL と削除理由を添えてメールでの連絡をしてください。
+
+## Makefile
+
+Makefile は、Go プロジェクトのビルド、テスト、クリーンなどのタスクを自動化するためのツールです。
+現在のソフトウェア開発では、誰が、どこで、いつ実行しても繰り返し自動的にビルドが行える環境を求められています。
+
+このためには、何らかのスクリプトを使ってビルドを実行する必要があります。Go の開発者たちは、make コマンドを使ってビルドを実行することを採用しました。make は 1976 年に開発されたコマンドで、Unix や Linux のシステムで広く使われています。
+Makefile は、コマンドを記述して、それを実行することで、タスクを自動化できます。
+
+```makefile
+.DEFAULT_GOAL := build
+
+fmt:
+	go fmt
+
+.PHONY: fmt
+
+lint: fmt
+	staticcheck
+
+.PHONY: lint
+
+vet: fmt
+	go vet
+
+.PHONY: vet
+
+build: vet
+  go mod tidy
+  go build
+
+.PHONY: build
+```
+
+記述対象の「操作」のことを ターゲット と呼びます。
+`.DEFAULT_GOAL` は、デフォルトのターゲットを指定するための変数です。
+`:` の前にある文字列がターゲットの名前を表します。
+ターゲットの後ろに書いてある文字列はそのターゲットの前提となる１段階前のターゲットです。
+ターゲットによって実行されるべきタスクはその下のインデントされた行で書かれた内容です。
+
+```makefile
+.PHONY: build
+
+build: fmt # build ターゲットは fmt ターゲットを前提とする
+  go mod tidy # build ターゲットは go mod tidy を実行する
+  go build # build ターゲットは go build を実行する
+```
+
+`.PHONY` の行は、通常はなくても動作しますが、同じ名前のディレクトリが存在したりする場合に (make や読んだ人が) 混乱するのを防いでいます。`.PHONY` は、ターゲットがファイルではないことを示すための変数です。
+例えば、`.PHONY: fmt` で fmt ターゲットがファイルではないことを示しています。
+fmt という名前をつけたタスクを実行するためのターゲットであることを示します。
+`.PHONY` は、ターゲットがファイルではないことを示すための変数です。
+
+Makefile の記述に沿ってチェックやビルドを行うには make コマンドを使います。
+
+```bash frame=none
+make
+
+# こちらを実行すると Makefile の記述に沿ってチェックやビルドを行う
+go fmt
+go vet
+go mod tidy
+go build
+```
+
+make を実行すると、
+
+<Steps>
+
+1. fmt を実行し、コードをフォーマットする
+1. vet を実行し、コードのリントチェックを行う
+1. tidy で依存関係を解決する
+1. build を実行し、コードをビルドする
+
+</Steps>
+
+という順番でタスクが実行されます。ビルドを実行する際には必ずフォーマットを確認し、
+vet を行うというステップを経ることが保障されるようになります。
+
+:::caution[Makefile の記述]
+
+Makefile に記述する際には細かな注意点が必要です。
+ターゲットを make する際に実行されるステップ(コマンドなど)は、必ずタブをつかってインデントしてください。
+また、Windows では最初から使えるようになっておらず、インストールが必要です。インストールする際には、[make の公式ドキュメント](https://www.gnu.org/software/make/manual/make.html) を参照してください。
+
+Chocolatey (Windows で利用するパッケージマネージャー) でインストールする場合は以下のコマンドを実行してください。
+
+```bash frame=none
+choco install make
+```
+
+:::
+
+## 開発環境やバイナリファイルの更新
+
+Go 言語の開発環境も他の言語と同様に定期的に更新されますが、Go のプログラムはバイナリ形式であり、ランタイム(実行系)には依存しません。従って、開発環境を変更しても今まで動いていたプログラムが動かなくなる心配はありません。
+
+異なるバージョンのコンパイラで生成されたプログラムを、同じ(仮想)マシンで実行可能です。
+
+Go 1.2 以降では、およそ半年ごとにメジャーアップデートが行われています。
+マイナーアップデートはバグやセキュリティ関連の問題が見つかるたびにリリースされています。
+開発サイクルの速さと Go チームの後方互換性を重視していることからアップデートは小規模なものになる傾向があります。
+
+<LinkPreview url="https://go.dev/doc/go1compat" title="Go 1 and the Future of Go Programs" />
+
+"Go 1 and the Future of Go Programs" では Go チームがコードの互換性を保持したまま改良を行なっている様子を詳細に記述しています。Go のバージョン 1.x では言語そのものあるいは標準ライブラリに対して後方互換性を被ることはしない旨が書かれています(バグあるいはセキュリティに関する修正を除く)。
+しかし、go コマンドのフラグや機能にかんしては互換性が保たれない可能性があります。
+
+バージョンアップによってプログラムが動かなくなる可能性は 0 ではありません。
+この対策として、バージョンアップの前にテストを行い、バージョンアップ後にテストを行うことで、バージョンアップによってプログラムが動かなくなる可能性を減らすことができます。
+
+複数のバージョンによる Go の開発
+
+<LinkPreview url="https://go.dev/doc/manage-install" title="Go 1.21" />

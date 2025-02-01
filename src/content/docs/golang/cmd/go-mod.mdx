@@ -1,0 +1,87 @@
+---
+title: go mod
+description: モジュールを管理する
+tags:
+  - "Golang"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: go mod
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 3
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+## go mod について
+
+`go mod` はモジュールを管理するためのコマンドです。
+
+モジュールのサポートは 'go mod' だけでなく、すべての go コマンドに組み込まれています。
+例えば、依存関係の日々の追加、削除、アップグレード、ダウングレードは 'go get' を使用して行う必要があります。
+モジュール機能の概要については 'go help modules' を参照してください。
+
+ある程度の規模のプロジェクトになると Go のモジュール機能を使用したほうが便利になります。
+まずプロジェクトのディレクトリを作成して `go mod init` コマンドを実行します。
+
+**[モジュールとパッケージについて](/golang/base/module-and-package)**
+
+```bash frame=none
+# プロジェクトのディレクトリを作成してカレントディレクトリを移動
+mkdir hello_world
+cd hello_world
+
+# モジュールを初期化、ディレクトリ内に go.mod ファイルが作成される
+go mod init hello_world
+# go: creating new go.mod: module hello_world
+```
+
+モジュールファイルの内容は以下
+
+```go title="hello_world/go.mod"
+module hello_world
+
+go 1.21.1
+```
+
+.go ファイルを作成してモジュールとしてビルドします。
+
+```bash frame=none
+touch main.go
+# main.go ファイルを編集する
+
+go mod tidy
+go build
+```
+
+go.mod ファイルがあると、ビルド対象のファイルを指定しなくてもそのディレクトリ内の.go ファイルを解析して、コンパイルしてビルドします。`module hello_world` と書かれているので、`hello_world` というコマンドが作成されます。
+
+`go tidy` コマンドは、`go.mod` ファイルに記載されているモジュールの依存関係を更新します。ソースファイルを解析して、必要なサードパーティのライブラリのダウンロードや不要になったファイルの削除などを行います。
+
+### syntax
+
+```bash frame=none
+go mod <command> [arguments]
+```
+
+<Table
+  columns={["command", "description"]}
+  data={[
+    ["download", "モジュールをダウンロードする"],
+    ["edit", "go.mod を編集する"],
+    ["graph", "モジュールの依存関係グラフを表示する"],
+    ["init", "現在のディレクトリに新しいモジュールを初期化する"],
+    ["tidy", "不足しているモジュールを追加し、不要なモジュールを削除する"],
+    ["vendor", "依存関係のベンダー化されたコピーを作成する"],
+    ["verify", "依存関係が期待される内容を持っているか確認する"],
+    ["why", "パッケージまたはモジュールが必要な理由を説明する"],
+  ]}
+/>
+
+Use `go help mod <command>` for more information about a command.

@@ -1,0 +1,292 @@
+---
+title: go build
+description: パッケージを実行する
+tags:
+  - "Golang"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: go build
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 3
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+## go build について
+
+再利用できるように実行形式のバイナリファイルを作りたい場合は `go build` コマンドを使用します。
+
+```bash frame=none
+go build hello.go
+```
+
+これを実行することで、hello (windows の場合は hello.exe) という実行形式のバイナリファイルが作成されます。
+このファイルを実行するには `./hello` とします。
+バイナリファイルは `go run` コマンドでは実行できません。
+
+```bash frame=none
+# バイナリファイルを実行
+./hello
+Hello World
+2025-01-18 14:14:55.655597 +0900 JST m=+0.000276751
+
+# go run では実行できない
+go run ./main
+go: cannot find main module, but found .git/config in /Users/t_inoue/Documents/01_ProjectsApp/11_Practices/12_Golang_try
+        to create a module there, run:
+        go mod init
+```
+
+バイナリファイルの名前は指定したファイル名、ディレクトリ名、パッケージ名によって決定されます。
+変更したい場合は `-o` フラグを使用します。
+
+```bash frame=none
+go build -o myapp hello.go
+```
+
+:::tip[バイナリファイルの名前]
+
+`go build` を使うことで他人に使ってもらえる実行形式ファイルを作成できる。
+フラグ `-o` を使用することでバイナリファイルの名前を指定してわかりやすい名前にすることができる。
+
+:::
+
+### syntax
+
+```bash frame=none
+go build [-o output] [build flags] [packages]
+```
+
+Build はインポートパスで指定されたパッケージを依存関係と共にコンパイルしますが、結果をインストールはしません。
+
+build コマンドの引数が単一のディレクトリからの .go ファイルのリストである場合、
+build はそれらを単一のパッケージを指定するソースファイルのリストとして扱います。
+
+パッケージをコンパイルする際、build は `_test.go` で終わるファイルを無視します。
+
+単一の main パッケージをコンパイルする場合、build は
+最初のソースファイル名（`go build ed.go rx.go` は 'ed' または 'ed.exe' を出力）
+またはソースコードディレクトリ名（'go build unix/sam' は 'sam' または 'sam.exe' を出力）
+に基づいて実行可能ファイルを出力します。
+Windows 実行可能ファイルを出力する場合は `.exe` サフィックスが追加されます。
+
+複数のパッケージまたは単一の非 main パッケージをコンパイルする場合、
+build はパッケージをコンパイルしますが、結果のオブジェクトは破棄され、
+パッケージがビルド可能かどうかのチェックとしてのみ機能します。
+
+-o フラグを使用すると、前述の 2 つの段落で説明したデフォルトの動作の代わりに、
+指定された出力ファイルまたはディレクトリに実行可能ファイルやオブジェクトを
+強制的に書き込みます。指定された出力が既存のディレクトリであるか、
+スラッシュまたはバックスラッシュで終わる場合、生成された実行可能ファイルは
+そのディレクトリに書き込まれます。
+
+The build flags are shared by the build, clean, get, install, list, run,
+and test commands:
+
+<Table
+  columns={["フラグ", "説明"]}
+  data={[
+    [
+      "`-C dir`",
+      [
+        "コマンドを実行する前にディレクトリを変更します。",
+        "コマンドラインで指定されたファイルは、ディレクトリが変更された後に解釈されます。",
+        "このフラグは、コマンドラインの最初のフラグでなければなりません。",
+      ].join("<br/>"),
+    ],
+    ["-a", "すでに更新されているパッケージを強制的に再ビルドします。"],
+    ["-n", "コマンドを実行せずにコマンドを表示します。"],
+    [
+      "-p n",
+      [
+        "並列で実行できるコマンド（ビルドコマンドやテストバイナリなど）の数を指定します。",
+        "デフォルトは GOMAXPROCS で、通常は利用可能な CPU の数です。",
+      ].join("<br/>"),
+    ],
+    [
+      "-race",
+      [
+        "データ競合検出を有効にします。",
+        "Supported only on linux/amd64, freebsd/amd64, darwin/amd64, darwin/arm64, windows/amd64, linux/ppc64le and linux/arm64 (only for 48-bit VMA).",
+      ].join("<br/>"),
+    ],
+    [
+      "-msan",
+      [
+        "メモリサニタイザーとの相互作用を有効にします。",
+        "Supported only on linux/amd64, linux/arm64, freebsd/amd64 and only with Clang/LLVM as the host C compiler.",
+        "PIE build mode will be used on all platforms except linux/amd64.",
+      ].join("<br/>"),
+    ],
+    [
+      "-asan",
+      [
+        "アドレスサニタイザーとの相互作用を有効にします。",
+        "Supported only on linux/arm64, linux/amd64.",
+        "Supported only on linux/amd64 or linux/arm64 and only with GCC 7 and higher or Clang/LLVM 9 and higher.",
+      ].join("<br/>"),
+    ],
+    ["-cover", "コードカバレッジのインスツルメンテーションを有効にします。"],
+    [
+      "-covermode set,count,atomic",
+      [
+        "カバレッジ分析のモードを設定します。",
+        "カバレッジ解析のモードを設定する。デフォルトは `set` だが、`-race` が有効になっている場合は `atomic` です。",
+        "The values: ",
+        "set: (bool) このステートメントが実行されるかどうか?",
+        "count: (int) このステートメントが実行された回数",
+        "atomic: (int) count, ただしマルチスレッドテストで正しくなります。",
+        "significantly more expensive.",
+        "Sets -cover.",
+      ].join("<br/>"),
+    ],
+    [
+      "-coverpkg pattern1,pattern2,pattern3",
+      [
+        "パッケージ'main'をターゲットにしたビルドの場合（Go実行ファイルのビルドなど）、パターンにマッチする各パッケージにカバレッジ分析を適用する。",
+        "デフォルトでは、メインGoモジュール内のパッケージにカバレッジ分析を適用します。",
+        "パッケージパターンの説明は `go help packages` を参照してください。",
+        "Sets -cover.",
+      ].join("<br/>"),
+    ],
+    ["-v", "コンパイル時にパッケージ名を表示する。"],
+    ["-work", "一時作業ディレクトリの名前を表示し、終了時に削除しない。"],
+    ["-x", "コマンドを表示します。"],
+    ["-asmflags '[pattern=]arg list'", "各 go tool asm 呼び出しに渡す引数のスペース区切りのリスト。"],
+    ["-buildmode mode", "使用するビルドモードを指定します。詳細は `go help buildmode` を参照してください。"],
+    [
+      "-buildvcs",
+      [
+        "Whether to stamp binaries with version control information (`true`, `false`, or `auto`). ",
+        "By default (`auto`), version control information is stamped into a binary if the main package, the main module containing it, and the current directory are all in the same repository.",
+        "Use -buildvcs=false to always omit version control information, or -buildvcs=true to error out if version control information is available but cannot be included due to a missing tool or ambiguous directory structure.",
+      ].join("<br>"),
+    ],
+    ["-compiler name", "使用するコンパイラの名前。runtime.Compiler (gccgo または gc) と同じです。"],
+    ["-gccgoflags '[pattern=]arg list'", "各 gccgo コンパイラ/リンカー呼び出しに渡す引数のスペース区切りのリスト。"],
+    ["-gcflags '[pattern=]arg list'", "各 go tool compile 呼び出しに渡す引数のスペース区切りのリスト。"],
+    [
+      "-installsuffix suffix",
+      [
+        "デフォルトのビルドと出力を分けるために、パッケージインストールディレクトリ名に使用するサフィックスです。",
+        "-race フラグを使用する場合、インストールサフィックスは自動的に race に設定されるか、明示的に設定されている場合は _race が追加されます。",
+        "-msan フラグと -asan フラグも同様です。デフォルト以外のコンパイルフラグを必要とする -buildmode オプションを使用した場合も同様の効果があります。",
+      ].join("<br>"),
+    ],
+    ["-ldflags '[pattern=]arg list'", "各 go tool link 呼び出しに渡す引数のスペース区切りのリスト。"],
+    ["-linkshared", "`-buildmode=shared`で作成した共有ライブラリにリンクするコードをビルドする。"],
+    [
+      "-mod mode",
+      [
+        "モジュールダウンロードモードを使用する。",
+        "module download mode to use: readonly, vendor, or mod.",
+        "By default, if a vendor directory is present and the go version in go.mod is 1.14 or higher, the go command acts as if -mod=vendor were set.",
+        "Otherwise, the go command acts as if -mod=readonly were set.",
+        "See https://golang.org/ref/mod#build-commands for details.",
+      ].join("<br>"),
+    ],
+    [
+      "-modcacherw",
+      "モジュールキャッシュに新しく作成されたディレクトリは、読み取り専用にする代わりに、読み取り/書き込み専用にする。",
+    ],
+    [
+      "-modfile file",
+      [
+        "モジュール対応モードで、モジュールルートディレクトリにある go.mod ファイルの代わりに、別の go.mod ファイルを読み込み（および場合によって書き込み）ます。",
+        "モジュールルートディレクトリを特定するために「go.mod」という名前のファイルは必要ですが、このファイルにはアクセスされません。",
+        "-modfile が指定された場合、別の go.sum ファイルも使用されます。そのパスは -modfile フラグから「.mod」拡張子を削除して「.sum」を追加することで導出されます。",
+      ].join("<br>"),
+    ],
+    [
+      "`-overlay file`",
+      [
+        "ビルド操作用のオーバーレイを提供するJSON設定ファイルを読み込みます。",
+        "このファイルは 'Replace' という単一のフィールドを持つJSON構造体で、各ディスクファイルパス（文字列）をそのバックアップファイルパスにマッピングします。",
+        "これにより、ビルドはディスクファイルパスが指定された内容を持つか、バックアップファイルパスが空の場合は存在しないかのように実行されます。",
+        "-overlayフラグのサポートにはいくつかの制限があります：重要なのは、インクルードパスの外部から含まれるcgoファイルは、含まれるGoパッケージと同じディレクトリ内に存在する必要があり、オーバーレイは go run および go test を通じてバイナリおよびテストが実行される際には表示されないことです。",
+      ].join("<br/>"),
+    ],
+    [
+      "`-pgo file`",
+      [
+        "プロファイルガイド最適化（PGO）のプロファイルのファイルパスを指定します。",
+        "特殊な名前「auto」が指定された場合、ビルド内の各mainパッケージに対して、パッケージのディレクトリに「default.pgo」という名前のファイルが存在する場合にそれを選択し、mainパッケージの（推移的な）依存関係に適用します（その他のパッケージには影響しません）。",
+        "特殊な名前「off」はPGOを無効にします。デフォルトは「auto」です。",
+      ].join("<br/>"),
+    ],
+    [
+      "`-pkgdir dir`",
+      [
+        "通常の場所の代わりに、すべてのパッケージをdirからインストールおよびロードします。",
+        "例えば、非標準の構成でビルドする場合、生成されたパッケージを別の場所に保持するために -pkgdir を使用します。",
+      ].join("<br/>"),
+    ],
+    [
+      "`-tags tag,list`",
+      [
+        "ビルド中に満たされたと見なす追加のビルドタグのカンマ区切りリスト。",
+        "ビルドタグについての詳細は 'go help buildconstraint' を参照してください。（Goの以前のバージョンではスペース区切りのリストが使用されており、その形式は非推奨ですがまだ認識されています。）",
+      ].join("<br/>"),
+    ],
+    [
+      "`-trimpath`",
+      [
+        "生成された実行可能ファイルからすべてのファイルシステムパスを削除します。",
+        "絶対ファイルシステムパスの代わりに、記録されたファイル名はモジュールパス@バージョン（モジュールを使用している場合）または単純なインポートパス（標準ライブラリまたはGOPATHの場合）のいずれかで始まります。",
+      ].join("<br/>"),
+    ],
+    [
+      "`-toolexec 'cmd args'`",
+      [
+        "vetやasmなどのツールチェーンプログラムを呼び出すために使用するプログラム。",
+        "例えば、asmを実行する代わりに、goコマンドは 'cmd args /path/to/asm <asmへの引数>' を実行します。",
+        "TOOLEXEC_IMPORTPATH環境変数は、ビルドされるパッケージの 'go list -f {{.ImportPath}}' に一致するように設定されます。",
+      ].join("<br/>"),
+    ],
+  ]}
+/>
+
+`-asmflags`、`-gccgoflags` 、`-gcflags` 、および `-ldflags` フラグは、ビルド中に基盤となるツールに渡すスペース区切りの引数リストを受け取ります。
+リスト内の要素にスペースを埋め込みたい場合は、シングルクォートまたはダブルクォートで囲みます。
+引数リストの前には、パッケージパターンと等号が付くことがあり、これによりそのパッケージパターンに一致するパッケージのビルドにのみその引数リストの使用が制限されます（パッケージパターンの説明については「go help packages」を参照してください）。
+パターンなしでは、引数リストはコマンドラインで指定されたパッケージのみに適用されます。
+フラグは異なるパターンで繰り返し使用することができ、異なるパッケージセットに対して異なる引数を指定できます。
+パッケージが複数のフラグで指定されたパターンに一致する場合、コマンドラインで後に現れたフラグの一致が優先されます。
+例えば、`go build -gcflags=-S fmt` はパッケージ fmt のみの逆アセンブルを出力しますが、`go build -gcflags=all=-S fmt` は fmt およびその依存関係すべての逆アセンブルを出力します。
+
+パッケージの指定方法の詳細については「go help packages」を参照してください。
+パッケージとバイナリがどこにインストールされるかの詳細については「go help gopath」を実行してください。
+Go と C/C++間の呼び出し方法の詳細については「go help c」を実行してください。
+
+注意: Build は「go help gopath」で説明されているような特定の規約に従います。しかし、すべてのプロジェクトがこれらの規約に従えるわけではありません。
+独自の規約を持っていたり、別のソフトウェアビルドシステムを使用しているインストールでは、ビルドツールのオーバーヘッドや設計上の決定を避けるために、「go tool compile」や「go tool link」のような低レベルの呼び出しを選択する場合があります。
+
+関連項目: go install, go get, go clean.
+
+1. スペース区切りの引数リスト:
+   フラグはスペースで区切られた引数リストを受け入れます。引数にスペースを含めたい場合は、シングルクォートまたはダブルクォートで囲む必要があります。
+
+1. パッケージパターンの指定:
+   引数リストの前にパッケージパターンを指定することができ、これにより特定のパッケージにのみその引数が適用されます。
+   パターンが指定されていない場合、引数はコマンドラインで指定されたパッケージにのみ適用されます。
+
+1. フラグの優先順位:
+   同じパッケージに対して複数のフラグが適用される場合、コマンドラインで後に指定されたフラグが優先されます。
+
+1. 具体例:
+
+   - `go build -gcflags=-S fmt`: パッケージ fmt のみの逆アセンブルを出力します。
+   - `go build -gcflags=all=-S fmt`: パッケージ fmt およびその依存関係すべての逆アセンブルを出力します。
+
+1. 関連コマンドの案内:
+   パッケージの指定方法やインストール先、Go と C/C++間の呼び出し方法についての追加情報は、各種 go help コマンドを参照するよう案内しています。
+
+1. ビルドの規約と柔軟性:
+   go build は特定の規約に従いますが、すべてのプロジェクトがこれに従うわけではないため、低レベルのツールを直接使用する選択肢も提供されています。

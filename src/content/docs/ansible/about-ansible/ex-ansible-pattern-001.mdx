@@ -1,0 +1,1068 @@
+---
+title: EC2 インスタンスを取得して /etc/hosts を書き換え
+description: EC2 インスタンスの情報を取得して、/etc/hosts ファイルを書き換えます
+tags:
+  - "Ansible"
+  - "AWS"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: EC2 インスタンスを取得して /etc/hosts を書き換え
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 10
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps, FileTree } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+プレイブックのリファクタリングを進めるにあたり、以下の目標を達成することをお勧めします：
+
+## 作成したプレイブックのリファクタリング
+
+### 概要
+
+目標を達成するプレイブックの内容を以下の役割で分担できます。
+
+- **依存関係のインストール**:`pip`、`boto3`、`botocore`のインストール。
+- **EC2 インスタンス情報の取得**:AWS から EC2 インスタンスの情報を取得し、必要なデータを抽出・加工。
+- **`/etc/hosts`のバックアップと更新**:既存の`/etc/hosts`をバックアップし、新しい内容で上書き。
+
+これらの機能を基に、以下のロールに分割することが考えられます:
+
+- **dependencies**:必要なパッケージのインストール。
+- **ec2_info**:EC2 インスタンス情報の取得と処理。
+- **hosts_management**:`/etc/hosts`ファイルのバックアップと更新。
+
+### ディレクトリ構造の設定
+
+Ansible プロジェクトのディレクトリ構造を以下のように設定します:
+
+<FileTree>
+
+- ansible/
+  - playbook/
+    - over_write_hosts.yaml
+    - roles/
+      - dependencies/
+        - tasks/
+          - main.yaml
+      - ec2_info/
+        - vars/
+          - main.yaml
+        - tasks/
+          - main.yaml
+      - hosts_management/
+        - tasks/
+          - main.yaml
+        - templates/
+          - hosts.j2
+  - inventory/
+    - hosts.yaml
+
+</FileTree>
+
+### dependencies ロール
+
+```yaml title="ansible/playbook/roles/dependencies/tasks/main.yml"
+---
+- name: Ensure pip is installed
+  ansible.builtin.apt:
+    name: python3-pip
+    state: present
+  become: yes
+
+- name: Install boto3 and botocore
+  ansible.builtin.pip:
+    name:
+      - boto3
+      - botocore
+    state: present
+    executable: pip3
+  become: yes
+```
+
+### ec2_info ロール
+
+```yaml title="ansible/playbook/roles/ec2_info/vars/main.yml"
+---
+aws_profile: "developer"
+aws_region: "ap-northeast-1"
+name_prefix: "default_name_prefix" # デフォルト値。プレイブック実行時に上書き可能
+```
+
+```yaml title="ansible/playbook/roles/ec2_info/tasks/main.yml"
+---
+- name: Get Token from EC2 Metadata Service
+  ansible.builtin.uri:
+    url: http://169.254.169.254/latest/api/token
+    method: PUT
+    headers:
+      X-aws-ec2-metadata-token-ttl-seconds: "21600"
+    return_content: yes
+  register: metadata_token
+
+- name: Get local self IPv4 address
+  ansible.builtin.uri:
+    url: http://169.254.169.254/latest/meta-data/local-ipv4
+    method: GET
+    headers:
+      X-aws-ec2-metadata-token: "{{ metadata_token.content }}"
+    return_content: yes
+    status_code: 200
+  register: my_private_ip
+
+- name: Set my_local_ip variable
+  set_fact:
+    my_local_ip: "{{ my_private_ip.content }}"
+
+- name: Get EC2 instance info
+  amazon.aws.ec2_instance_info:
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ name_prefix }}*"
+      "instance-state-name": ["running"]
+  register: ec2_instances
+  become: yes
+  become_user: root
+  run_once: true
+  environment:
+    AWS_PROFILE: "{{ aws_profile }}"
+
+- name: Filter instance tags Name and private IP
+  set_fact:
+    name_ip_list: "{{ ec2_instances.instances | json_query('[].{Name: tags.Name, IP: private_ip_address}') }}"
+
+- name: Put instance number part into name_ip_list
+  set_fact:
+    instances_with_num: "{{ instances_with_num | default([]) + [{'Name': item.Name, 'IP': item.IP, 'num': (item.Name.split(name_prefix) | last | int)}] }}"
+  loop: "{{ name_ip_list }}"
+  loop_control:
+    loop_var: item
+  when: item.Name is defined and item.Name.startswith(name_prefix)
+
+- name: Sort by instance number at instances_with_num
+  set_fact:
+    sorted_instances: "{{ instances_with_num | sort(attribute='num') }}"
+
+- name: ソートされた IP アドレスを抽出し、自身の IP を除外
+  set_fact:
+    sorted_ips: "{{ sorted_instances | map(attribute='IP') | select('!=', my_local_ip) | list }}"
+
+- name: 各 IP アドレスを表示
+  debug:
+    msg: "{{ item }}"
+  loop: "{{ sorted_ips }}"
+  tags:
+    - debug
+```
+
+tags を使用することで、デバッグタスクを実行・スキップできます。`--tags` オプションでタグを指定して実行できます。
+
+```bash frame=none
+ansible-playbook -i $INVENTORY_FILE $PLAYBOOK_FILE -e "key=value" --tags debug
+# デバッグタスクをスキップ
+ansible-playbook -i $INVENTORY_FILE $PLAYBOOK_FILE -e "key=value" --skip-tags debug
+```
+
+### hosts_management ロール
+
+```yaml title="ansible/playbook/roles/hosts_management/tasks/main.yml"
+---
+- name: Get current hostname
+  ansible.builtin.command: hostname
+  register: current_hostname
+  become: yes
+
+- name: Set hostname variable
+  set_fact:
+    hostname: "{{ current_hostname.stdout }}"
+
+- name: Backup /etc/hosts
+  ansible.builtin.copy:
+    src: /etc/hosts
+    dest: /etc/hosts.bak
+    remote_src: yes
+    backup: yes
+  become: yes
+
+- name: Create new /etc/hosts content
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: "0644"
+  become: yes
+```
+
+```jinja title="ansible/playbook/roles/hosts_management/templates/hosts.j2"
+# /etc/hosts
+127.0.0.1 localhost {{ hostname }}
+
+# The following lines are desirable for IPv6 capable hosts
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+
+# AWS EC2 インスタンスのエントリ
+{% for ip in sorted_ips %}
+{{ ip }} aws-mail-relay.com
+{% endfor %}
+```
+
+### 更新後のメインプレイブック
+
+ロールを作成した後、メインプレイブック（`over_write_hosts.yml`）を以下のように更新します。
+これにより、ロールが順番に実行され、全体の処理が整理されます。
+
+```yaml title="ansible/playbook/over_write_hosts.yml"
+---
+- name: Manage EC2 Instances and /etc/hosts
+  hosts: ec2
+  gather_facts: false
+
+  roles:
+    - dependencies
+    - ec2_info
+    - hosts_management
+```
+
+### プレイブックの実行方法
+
+以下のコマンドでプレイブックを実行します。必要な変数はコマンドラインで渡すか、`vars`ディレクトリ内のファイルで設定します。
+
+```bash frame=none
+ansible-playbook -i $INVENTORY_FILE $PLAYBOOK_FILE -e "key=value"
+```
+
+### セキュリティの確保
+
+AWS 認証情報などの機密情報は、Ansible Vault を使用して暗号化し、安全に管理します。
+
+```bash frame=none
+# 変数ファイルを暗号化する例
+ansible-vault encrypt roles/ec2_info/vars/main.yml
+```
+
+### テストと検証
+
+リファクタリング後のプレイブックを実行する前に、以下の点を確認します：
+
+1. **ロールごとの独立性**：各ロールが単独で動作することを確認。
+2. **変数の正確な設定**：必要な変数が正しく設定されていること。
+3. **テンプレートの正確性**：`hosts.j2` テンプレートが期待通りに出力されること。
+4. **バックアップの作成確認**：`/etc/hosts.bak` が正しく作成されていること。
+
+プレイブックの実行後、リモートホスト上で`/etc/hosts`ファイルを確認し、期待通りの内容になっていることを確認します。
+
+```bash
+cat /etc/hosts
+```
+
+## Ansible タグを使用してデバッグタスクを管理する
+
+### 概要
+
+Ansible のタグ機能を活用して、デバッグタスクを特定のタグ（例：`debug`）でマークします。プレイブックを実行する際に、必要に応じてこれらのデバッグタスクを有効化または無効化できます。
+
+### 手順
+
+<Steps>
+
+1. 各デバッグタスクにタグを追加する
+
+   デバッグタスクに `debug` タグを追加します。これにより、プレイブック実行時にタグを指定してデバッグタスクを実行・スキップできます。
+
+   ```yaml
+   # roles/ec2_info/tasks/main.yml
+
+   - name: Get Token from EC2 Metadata Service
+     ansible.builtin.uri:
+       url: http://169.254.169.254/latest/api/token
+       method: PUT
+       headers:
+         X-aws-ec2-metadata-token-ttl-seconds: "21600"
+       return_content: yes
+     register: metadata_token
+     tags:
+       - debug
+
+   - name: Get local self IPv4 address
+     ansible.builtin.uri:
+       url: http://169.254.169.254/latest/meta-data/local-ipv4
+       method: GET
+       headers:
+         X-aws-ec2-metadata-token: "{{ metadata_token.content }}"
+       return_content: yes
+       status_code: 200
+     register: my_private_ip
+     tags:
+       - debug
+
+   - name: Set my_local_ip variable
+     set_fact:
+       my_local_ip: "{{ my_private_ip.content }}"
+     tags:
+       - debug
+
+   - name: AWS EC2 インスタンス情報を取得
+     amazon.aws.ec2_instance_info:
+       profile: "{{ aws_profile }}"
+       region: "{{ aws_region }}"
+       filters:
+         "tag:Name": "{{ name_prefix }}*"
+         "instance-state-name": ["running"]
+     register: ec2_instances
+     become: yes
+     become_user: root
+     run_once: true
+     environment:
+       AWS_PROFILE: "{{ aws_profile }}"
+     tags:
+       - debug
+
+   - name: インスタンスの Name タグと Private IP を抽出
+     set_fact:
+       name_ip_list: "{{ ec2_instances.instances | json_query('[].{Name: tags.Name, IP: private_ip_address}') }}"
+     tags:
+       - debug
+
+   - name: インスタンス情報に数値部分を追加
+     set_fact:
+       instances_with_num: "{{ instances_with_num | default([]) + [{'Name': item.Name, 'IP': item.IP, 'num': (item.Name.split(name_prefix) | last | int)}] }}"
+     loop: "{{ name_ip_list }}"
+     loop_control:
+       loop_var: item
+     tags:
+       - debug
+
+   - name: インスタンス情報を数値でソート
+     set_fact:
+       sorted_instances: "{{ instances_with_num | sort(attribute='num') }}"
+     tags:
+       - debug
+
+   - name: ソートされた IP アドレスを抽出し、自身の IP を除外
+     set_fact:
+       sorted_ips: "{{ sorted_instances | map(attribute='IP') | select('!=', my_local_ip) | list }}"
+     tags:
+       - debug
+
+   - name: 各 IP アドレスを表示
+     debug:
+       msg: "{{ item }}"
+     loop: "{{ sorted_ips }}"
+     tags:
+       - debug
+   ```
+
+2. **プレイブック実行時にタグを指定する**
+
+   デバッグタスクを実行したい場合は、`--tags` オプションを使用してタグ付きタスクを実行します。デバッグタスクをスキップしたい場合は、`--skip-tags` オプションを使用します。
+
+   ```bash
+   # デバッグタスクを含めて実行
+   ansible-playbook -i inventory/hosts playbook.yml -e "name_prefix=ubt.tky-" --tags debug
+
+   # デバッグタスクをスキップして実行
+   ansible-playbook -i inventory/hosts playbook.yml -e "name_prefix=ubt.tky-" --skip-tags debug
+   ```
+
+   **利点**:
+
+   - 必要に応じてデバッグタスクを簡単に有効化・無効化できる。
+   - プレイブック本体がクリーンなまま保たれる。
+
+</Steps>
+
+## **2. デバッグタスクを別のタスクファイルとして分離する**
+
+**概要**:
+デバッグタスクを各ロール内で別のタスクファイルに分割し、必要に応じてインクルード（`include_tasks`）します。これにより、デバッグタスクが主タスクから明確に分離されます。
+
+**手順**:
+
+1. **デバッグタスクを別ファイルに移動する**
+
+   例えば、`roles/ec2_info/tasks/debug.yml` にデバッグタスクを移動します。
+
+   ```yaml
+   # roles/ec2_info/tasks/debug.yml
+
+   - name: Display ec2_instances
+     debug:
+       var: ec2_instances
+
+   - name: Display name_ip_list
+     debug:
+       var: name_ip_list
+
+   - name: Display instances_with_num
+     debug:
+       var: instances_with_num
+
+   - name: Display sorted_ips
+     debug:
+       var: sorted_ips
+   ```
+
+2. **メインタスクファイルからデバッグタスクをインクルードする**
+
+   `roles/ec2_info/tasks/main.yml` の最後に条件付きでデバッグタスクをインクルードします。例えば、変数 `enable_debug` が `true` の場合にのみインクルードします。
+
+   ```yaml
+   # roles/ec2_info/tasks/main.yml
+
+   # 既存のタスク...
+
+   - name: インスタンス情報を数値でソート
+     set_fact:
+       sorted_instances: "{{ instances_with_num | sort(attribute='num') }}"
+     tags:
+       - debug
+
+   - name: ソートされた IP アドレスを抽出し、自身の IP を除外
+     set_fact:
+       sorted_ips: "{{ sorted_instances | map(attribute='IP') | select('!=', my_local_ip) | list }}"
+     tags:
+       - debug
+
+   - name: 各 IP アドレスを表示
+     debug:
+       msg: "{{ item }}"
+     loop: "{{ sorted_ips }}"
+     tags:
+       - debug
+
+   # デバッグタスクのインクルード
+   - name: Include debug tasks if enabled
+     include_tasks: debug.yml
+     when: enable_debug | default(false)
+   ```
+
+3. **プレイブックで変数を設定してデバッグタスクを有効化する**
+
+   プレイブックの実行時に、`enable_debug=true` を渡すことでデバッグタスクを実行できます。
+
+   ```bash
+   ansible-playbook -i inventory/hosts playbook.yml -e "name_prefix=ubt.tky-" -e "enable_debug=true"
+   ```
+
+**利点**:
+
+- デバッグタスクがメインタスクから分離され、必要なときにのみ読み込まれる。
+- プレイブックやロールの主タスクがクリーンに保たれる。
+
+## **3. デバッグ専用のロールを作成する**
+
+**概要**:
+デバッグタスクを専用のロールとして管理し、必要に応じてそのロールをプレイブックに追加します。これにより、デバッグ機能が完全に独立し、他のロールと混在しません。
+
+**手順**:
+
+1. **デバッグロールの作成**
+
+   デバッグ専用のロール `debug_tasks` を作成します。
+
+   **ディレクトリ構造:**
+
+   ```
+   roles/
+   └── debug_tasks/
+       └── tasks/
+           └── main.yml
+   ```
+
+   **`roles/debug_tasks/tasks/main.yml`:**
+
+   ```yaml
+   ---
+   # roles/debug_tasks/tasks/main.yml
+
+   - name: Display ec2_instances
+     debug:
+       var: ec2_instances
+
+   - name: Display name_ip_list
+     debug:
+       var: name_ip_list
+
+   - name: Display instances_with_num
+     debug:
+       var: instances_with_num
+
+   - name: Display sorted_ips
+     debug:
+       var: sorted_ips
+   ```
+
+2. **メインプレイブックでデバッグロールをオプションとしてインクルードする**
+
+   メインプレイブックに条件付きでデバッグロールを追加します。例えば、変数 `enable_debug` が `true` の場合にのみ実行します。
+
+   ```yaml
+   ---
+   - name: Manage EC2 Instances and /etc/hosts
+     hosts: ec2
+     gather_facts: false
+
+     vars:
+       hostname: "{{ inventory_hostname }}" # 必要に応じて動的に設定可能
+
+     roles:
+       - dependencies
+       - ec2_info
+       - hosts_management
+       - { role: debug_tasks, when: enable_debug | default(false) }
+   ```
+
+3. **プレイブック実行時にデバッグロールを有効化する**
+
+   デバッグタスクを実行したい場合は、`enable_debug=true` を渡します。
+
+   ```bash
+   ansible-playbook -i inventory/hosts playbook.yml -e "name_prefix=ubt.tky-" -e "enable_debug=true"
+   ```
+
+**利点**:
+
+- デバッグ機能が完全に独立して管理される。
+- デバッグロールを他のプレイブックでも再利用可能。
+- プレイブック本体がクリーンで明確な構造を維持。
+
+## **4. まとめとおすすめのアプローチ**
+
+**おすすめアプローチ**:
+
+- **タグを使用する方法**が最もシンプルで柔軟性があります。デバッグタスクをロール内に保持し、必要なときにタグを指定して実行できます。
+- **別ファイルに分離する方法**や**デバッグ専用のロールを作成する方法**も有効ですが、プレイブックの規模や運用方法に応じて選択してください。
+
+**総合的なプレイブックの例**:
+以下に、タグを使用してデバッグタスクを管理する方法を採用したプレイブックの完全な例を示します。
+
+### **ディレクトリ構造**:
+
+```
+your-playbook-directory/
+├── playbook.yml
+├── roles/
+│   ├── dependencies/
+│   │   └── tasks/
+│   │       └── main.yml
+│   ├── ec2_info/
+│   │   ├── tasks/
+│   │   │   └── main.yml
+│   │   └── vars/
+│   │       └── main.yml
+│   └── hosts_management/
+│       ├── tasks/
+│       │   └── main.yml
+│       └── templates/
+│           └── hosts.j2
+└── inventory/
+    └── hosts
+```
+
+### **メインプレイブック (`playbook.yml`)**:
+
+```yaml
+---
+- name: Manage EC2 Instances and /etc/hosts
+  hosts: ec2
+  gather_facts: false
+
+  roles:
+    - dependencies
+    - ec2_info
+    - hosts_management
+```
+
+### **ロール内のデバッグタスクにタグを追加**
+
+**`roles/ec2_info/tasks/main.yml`**:
+
+```yaml
+---
+# roles/ec2_info/tasks/main.yml
+
+- name: Get Token from EC2 Metadata Service
+  ansible.builtin.uri:
+    url: http://169.254.169.254/latest/api/token
+    method: PUT
+    headers:
+      X-aws-ec2-metadata-token-ttl-seconds: "21600"
+    return_content: yes
+  register: metadata_token
+  tags:
+    - debug
+
+- name: Get local self IPv4 address
+  ansible.builtin.uri:
+    url: http://169.254.169.254/latest/meta-data/local-ipv4
+    method: GET
+    headers:
+      X-aws-ec2-metadata-token: "{{ metadata_token.content }}"
+    return_content: yes
+    status_code: 200
+  register: my_private_ip
+  tags:
+    - debug
+
+- name: Set my_local_ip variable
+  set_fact:
+    my_local_ip: "{{ my_private_ip.content }}"
+  tags:
+    - debug
+
+- name: AWS EC2 インスタンス情報を取得
+  amazon.aws.ec2_instance_info:
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ name_prefix }}*"
+      "instance-state-name": ["running"]
+  register: ec2_instances
+  become: yes
+  become_user: root
+  run_once: true
+  environment:
+    AWS_PROFILE: "{{ aws_profile }}"
+  tags:
+    - debug
+
+- name: インスタンスの Name タグと Private IP を抽出
+  set_fact:
+    name_ip_list: "{{ ec2_instances.instances | json_query('[].{Name: tags.Name, IP: private_ip_address}') }}"
+  tags:
+    - debug
+
+- name: インスタンス情報に数値部分を追加
+  set_fact:
+    instances_with_num: "{{ instances_with_num | default([]) + [{'Name': item.Name, 'IP': item.IP, 'num': (item.Name.split(name_prefix) | last | int)}] }}"
+  loop: "{{ name_ip_list }}"
+  loop_control:
+    loop_var: item
+  tags:
+    - debug
+
+- name: インスタンス情報を数値でソート
+  set_fact:
+    sorted_instances: "{{ instances_with_num | sort(attribute='num') }}"
+  tags:
+    - debug
+
+- name: ソートされた IP アドレスを抽出し、自身の IP を除外
+  set_fact:
+    sorted_ips: "{{ sorted_instances | map(attribute='IP') | select('!=', my_local_ip) | list }}"
+  tags:
+    - debug
+
+- name: 各 IP アドレスを表示
+  debug:
+    msg: "{{ item }}"
+  loop: "{{ sorted_ips }}"
+  tags:
+    - debug
+```
+
+**プレイブックの実行方法**:
+
+- **デバッグタスクを実行**:
+
+  ```bash
+  ansible-playbook -i inventory/hosts playbook.yml -e "name_prefix=ubt.tky-" --tags debug
+  ```
+
+- **デバッグタスクをスキップ**:
+
+  ```bash
+  ansible-playbook -i inventory/hosts playbook.yml -e "name_prefix=ubt.tky-" --skip-tags debug
+  ```
+
+## **5. 追加のベストプラクティス**
+
+### **A. 環境変数や機密情報の管理**
+
+- AWS 認証情報や他の機密情報は、Ansible Vault を使用して暗号化し、安全に管理します。
+
+  ```bash
+  # 変数ファイルを暗号化する例
+  ansible-vault encrypt roles/ec2_info/vars/main.yml
+  ```
+
+### **B. 変数の一貫性と再利用性**
+
+- 各ロールで必要な変数は、ロールの `vars` ディレクトリ内で管理します。これにより、変数のスコープが明確になり、再利用性が向上します。
+
+### **C. テンプレートのバージョン管理**
+
+- テンプレートファイル（例: `hosts.j2`）もバージョン管理システム（Git など）で管理し、変更履歴を追跡できるようにします。
+
+### **D. ロールのドキュメント化**
+
+- 各ロール内に `README.md` ファイルを作成し、ロールの目的や使用方法、必要な変数などを明確に記述します。
+
+  **例: `roles/ec2_info/README.md`**
+
+  ```markdown
+  # ec2_info Role
+
+  ## 概要
+
+  AWS EC2 インスタンス情報を取得し、必要なデータを加工します。
+
+  ## 変数
+
+  - `aws_profile` (必須): AWS プロファイル名
+  - `aws_region` (必須): AWS リージョン
+  - `name_prefix` (必須): EC2 インスタンスのタグ `Name` に使用するプレフィックス
+  ```
+
+## **6. 最終的なプレイブックの例**
+
+以下に、Ansible タグを使用してデバッグタスクを管理する方法を採用したプレイブックの完全な例を再掲します。
+
+### **ディレクトリ構造**:
+
+```
+your-playbook-directory/
+├── playbook.yml
+├── roles/
+│   ├── dependencies/
+│   │   └── tasks/
+│   │       └── main.yml
+│   ├── ec2_info/
+│   │   ├── tasks/
+│   │   │   └── main.yml
+│   │   └── vars/
+│   │       └── main.yml
+│   └── hosts_management/
+│       ├── tasks/
+│       │   └── main.yml
+│       └── templates/
+│           └── hosts.j2
+└── inventory/
+    └── hosts
+```
+
+### **メインプレイブック (`playbook.yml`)**:
+
+```yaml
+---
+- name: Manage EC2 Instances and /etc/hosts
+  hosts: ec2
+  gather_facts: false
+
+  roles:
+    - dependencies
+    - ec2_info
+    - hosts_management
+```
+
+### **`roles/dependencies/tasks/main.yml`**:
+
+```yaml
+---
+- name: Ensure pip is installed
+  ansible.builtin.apt:
+    name: python3-pip
+    state: present
+  become: yes
+
+- name: Install boto3 and botocore
+  ansible.builtin.pip:
+    name:
+      - boto3
+      - botocore
+    state: present
+    executable: pip3
+  become: yes
+```
+
+### **`roles/ec2_info/vars/main.yml`**:
+
+```yaml
+---
+# roles/ec2_info/vars/main.yml
+
+aws_profile: "registerRoute53"
+aws_region: "ap-northeast-1"
+name_prefix: "ubt.tky-" # デフォルト値。プレイブック実行時に上書き可能
+```
+
+### **`roles/ec2_info/tasks/main.yml`**:
+
+```yaml
+---
+# roles/ec2_info/tasks/main.yml
+
+- name: Get Token from EC2 Metadata Service
+  ansible.builtin.uri:
+    url: http://169.254.169.254/latest/api/token
+    method: PUT
+    headers:
+      X-aws-ec2-metadata-token-ttl-seconds: "21600"
+    return_content: yes
+  register: metadata_token
+  tags:
+    - debug
+
+- name: Get local self IPv4 address
+  ansible.builtin.uri:
+    url: http://169.254.169.254/latest/meta-data/local-ipv4
+    method: GET
+    headers:
+      X-aws-ec2-metadata-token: "{{ metadata_token.content }}"
+    return_content: yes
+    status_code: 200
+  register: my_private_ip
+  tags:
+    - debug
+
+- name: Set my_local_ip variable
+  set_fact:
+    my_local_ip: "{{ my_private_ip.content }}"
+  tags:
+    - debug
+
+- name: AWS EC2 インスタンス情報を取得
+  amazon.aws.ec2_instance_info:
+    profile: "{{ aws_profile }}"
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Name": "{{ name_prefix }}*"
+      "instance-state-name": ["running"]
+  register: ec2_instances
+  become: yes
+  become_user: root
+  run_once: true
+  environment:
+    AWS_PROFILE: "{{ aws_profile }}"
+  tags:
+    - debug
+
+- name: インスタンスの Name タグと Private IP を抽出
+  set_fact:
+    name_ip_list: "{{ ec2_instances.instances | json_query('[].{Name: tags.Name, IP: private_ip_address}') }}"
+  tags:
+    - debug
+
+- name: インスタンス情報に数値部分を追加
+  set_fact:
+    instances_with_num: "{{ instances_with_num | default([]) + [{'Name': item.Name, 'IP': item.IP, 'num': (item.Name.split(name_prefix) | last | int)}] }}"
+  loop: "{{ name_ip_list }}"
+  loop_control:
+    loop_var: item
+  tags:
+    - debug
+
+- name: インスタンス情報を数値でソート
+  set_fact:
+    sorted_instances: "{{ instances_with_num | sort(attribute='num') }}"
+  tags:
+    - debug
+
+- name: ソートされた IP アドレスを抽出し、自身の IP を除外
+  set_fact:
+    sorted_ips: "{{ sorted_instances | map(attribute='IP') | select('!=', my_local_ip) | list }}"
+  tags:
+    - debug
+
+- name: 各 IP アドレスを表示
+  debug:
+    msg: "{{ item }}"
+  loop: "{{ sorted_ips }}"
+  tags:
+    - debug
+```
+
+### **`roles/hosts_management/tasks/main.yml`**:
+
+```yaml
+---
+# roles/hosts_management/tasks/main.yml
+
+- name: Get current hostname
+  ansible.builtin.command: hostname
+  register: current_hostname
+  become: yes
+
+- name: Set hostname variable
+  set_fact:
+    hostname: "{{ current_hostname.stdout }}"
+
+- name: Backup /etc/hosts
+  ansible.builtin.copy:
+    src: /etc/hosts
+    dest: /etc/hosts.bak
+    remote_src: yes
+    backup: yes
+  become: yes
+
+- name: Create new /etc/hosts content
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: "0644"
+  become: yes
+```
+
+### **`roles/hosts_management/templates/hosts.j2`**:
+
+```jinja
+# /etc/hosts
+127.0.0.1 localhost {{ hostname }}
+
+# The following lines are desirable for IPv6 capable hosts
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+
+# AWS EC2 インスタンスのエントリ
+{% for ip in sorted_ips %}
+{{ ip }} aws-mail-relay.com
+{% endfor %}
+```
+
+### **プレイブックの実行例**:
+
+- **通常実行**（デバッグタスクはスキップ）:
+
+  ```bash
+  ansible-playbook -i inventory/hosts playbook.yml -e "name_prefix=ubt.tky-"
+  ```
+
+- **デバッグタスクを含めて実行**:
+
+  ```bash
+  ansible-playbook -i inventory/hosts playbook.yml -e "name_prefix=ubt.tky-" --tags debug
+  ```
+
+- **デバッグタスクをスキップして実行**:
+
+  ```bash
+  ansible-playbook -i inventory/hosts playbook.yml -e "name_prefix=ubt.tky-" --skip-tags debug
+  ```
+
+## **6. 他のリファクタリングアイデア**
+
+ロールをさらに細分化することも検討できます。以下に、追加のリファクタリングアイデアを示します。
+
+### **A. ホスト名の自動取得をロール内に含める**
+
+ホスト名を自動で取得し、テンプレートに渡すロジックを `hosts_management` ロール内に含めることで、プレイブックのメイン部分がさらにシンプルになります。
+
+### **B. 環境ごとの設定を変数ファイルで管理する**
+
+異なる環境（開発、ステージング、本番）ごとに変数ファイルを用意し、プレイブック実行時に適切な変数ファイルを指定することで、柔軟な運用が可能です。
+
+**例**:
+
+```
+your-playbook-directory/
+├── playbook.yml
+├── roles/
+│   ├── dependencies/
+│   ├── ec2_info/
+│   └── hosts_management/
+├── inventory/
+│   └── hosts
+├── vars/
+│   ├── dev.yml
+│   ├── staging.yml
+│   └── production.yml
+└── templates/
+    └── hosts.j2
+```
+
+**プレイブック実行時に変数ファイルを指定**:
+
+```bash
+ansible-playbook -i inventory/hosts playbook.yml -e "@vars/dev.yml"
+```
+
+### **C. ロールごとの依存関係を定義する**
+
+ロール間の依存関係を `meta/main.yml` ファイルで定義し、プレイブックが自動的に必要なロールをロードできるようにします。
+
+**例**:
+
+**`roles/ec2_info/meta/main.yml`**:
+
+```yaml
+---
+# roles/ec2_info/meta/main.yml
+
+dependencies:
+  - role: dependencies
+```
+
+これにより、`ec2_info` ロールをインクルードするだけで、`dependencies` ロールも自動的に実行されます。
+
+### **D. テストと検証**
+
+リファクタリング後のプレイブックとロールが期待通りに動作するか、テスト環境で十分に検証します。特に、`/etc/hosts` ファイルの更新が正しく行われているかを確認します。
+
+**確認方法**:
+
+```bash
+cat /etc/hosts
+```
+
+期待される内容は以下の通りです：
+
+```plaintext
+127.0.0.1 localhost ubt.tky-100
+
+# The following lines are desirable for IPv6 capable hosts
+::1 ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+ff02::3 ip6-allhosts
+
+# AWS EC2 インスタンスのエントリ
+172.31.44.52 aws-mail-relay.com
+172.31.14.62 aws-mail-relay.com
+```
+
+## **7. まとめ**
+
+デバッグタスクを効率的に管理・運用するための主な方法は以下の通りです：
+
+1. **Ansible タグを使用する**:
+
+   - タグ付きデバッグタスクを作成し、必要に応じて実行・スキップする。
+   - プレイブック実行時に `--tags` または `--skip-tags` オプションを使用する。
+
+2. **デバッグタスクを別ファイルに分離する**:
+
+   - デバッグタスクを別のタスクファイルに分離し、条件付きでインクルードする。
+
+3. **デバッグ専用のロールを作成する**:
+   - デバッグタスクを専用のロールとして管理し、必要に応じてプレイブックに追加する。
+
+**おすすめ**:
+最も柔軟で簡単なのは **Ansible タグを使用する方法** です。ロール内にデバッグタスクを保持し、必要に応じてプレイブック実行時にタグを指定することで、デバッグと本番運用の両方をシームレスに行えます。
+
+**補足**:
+
+- プレイブックやロールの可読性とメンテナンス性を高めるため、タスクのコメントやドキュメント化を心がけましょう。
+- 大規模なプレイブックでは、変数やテンプレートの管理を一元化し、再利用性を向上させることが重要です。
+
+もし具体的なロール構成や追加のカスタマイズが必要であれば、詳細な要件を教えてください。さらに具体的なアドバイスを提供いたします。

@@ -9,9 +9,10 @@ import jschardet from 'jschardet';
 interface Props {
     url: string;
     type?: 'card' | 'inline';
+    title?: string;
 }
 
-const { url, type = 'card' } = Astro.props;
+const { url, type = 'card', title = '' } = Astro.props;
 
 async function fetchLinkInfo(url: string): Promise<[OGData, string]> {
     try {
@@ -78,6 +79,9 @@ async function fetchLinkInfo(url: string): Promise<[OGData, string]> {
 
         // 4. バッファを適切なエンコーディングでデコードし、OGタグを抽出
         const ogData = extractOGTags(bufferData, charset, url);
+        if (title) {
+            ogData.title = title;
+        }
         // 5. favicon を取得
         const faviconUrl = getFaviconUrl(bufferData, charset, url);
 

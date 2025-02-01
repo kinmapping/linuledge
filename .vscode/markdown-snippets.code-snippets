@@ -36,6 +36,25 @@
         ],
         "description": "Adds the frontmatter block for the cmd post"
     },
+
+    "Frontmatter2": {
+        "scope": "markdown",
+        "prefix": "frontmatter2",
+        "body": [
+            "---",
+            "title: $1",
+            "description: $2",
+            "tags:",
+            "  - ${4|ファイル・ディレクトリ管理, ネットワーク管理, リモート連携, 環境変数・シェル変数, システム情報および管理, 見つける・探す, ユーザーおよび権限管理, テキスト処理, パッケージ管理, シェルおよびスクリプト, ディスク管理, 圧縮およびアーカイブ, 開発ツール, ユーティリティ|}",
+            "label: ${5|false,true|}",
+            "order: ${6|10,20,30|}",
+            "# badge: ",
+            "#     text: ",
+            "#     variant: tip",
+            "---"
+        ],
+        "description": "Adds the frontmatter block for the cmd post"
+    },
     "Blog Template": {
         "scope": "markdown",
         "prefix": "template",
