@@ -58,8 +58,26 @@ terraform [global options] state <subcommand> [options] [args]
     <TabItem label="list">
     ステート内のリソースを一覧表示します。現在Terraformが管理しているリソースのリストを取得できます。
 
+    workspace にリソースが管理されていると
     ```bash frame=none
     terraform state list
+    module.events.aws_cloudwatch_event_rule.rule
+    module.events.aws_cloudwatch_event_target.target
+    module.events.aws_lambda_permission.permission
+    module.iam.data.aws_iam_policy_document.policy_doc
+    module.iam.data.aws_iam_policy_document.role_doc
+    module.iam.aws_iam_policy.policy
+    module.iam.aws_iam_role.role
+    module.iam.aws_iam_role_policy_attachment.attachment
+    module.lambda.aws_lambda_function.func
+    ```
+    workspace にリソースがない場合は
+    ```bash frame=none
+    No state file was found!
+
+    State management commands require a state file. Run this command
+    in a directory where Terraform has been run or use the -state flag
+    to point the command to a specific state location.
     ```
     </TabItem>
 
