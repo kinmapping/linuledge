@@ -1,0 +1,33 @@
+---
+// import { Icons, type StarlightIcon } from '@astrojs/starlight/components/Icons';
+
+interface Props {
+    // name: StarlightIcon;
+    label?: string;
+    color?: string;
+    size?: string;
+    class?: string;
+}
+
+const { label, size = '1em', color } = Astro.props;
+const a11yAttrs = label ? ({ 'aria-label': label } as const) : ({ 'aria-hidden': 'true' } as const);
+---
+
+<svg
+    {...a11yAttrs}
+    class={Astro.props.class}
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    set:html={`<path d="M3 8h18a1 1 0 1 0 0-2H3a1 1 0 0 0 0 2Zm18 8H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Zm0-5H3a1 1 0 0 0 0 2h18a1 1 0 0 0 0-2Z"/>`}
+/>
+
+<style define:vars={{ 'sl-icon-color': color, 'sl-icon-size': size }}>
+    svg {
+        color: var(--sl-icon-color);
+        font-size: var(--sl-icon-size, 1em);
+        width: 1em;
+    height: 1em;
+    }
+</style>

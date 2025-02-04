@@ -1,0 +1,141 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+
+// import MobileMenuToggle from '@astrojs/starlight/components/MobileMenuToggle.astro';
+import MobileMenuToggle from '@custom-components/MobileMenuToggle.astro';
+
+const { hasSidebar } = Astro.props;
+---
+
+<div class="page sl-flex">
+    <header class="header"><slot name="header" /></header>
+    {
+        hasSidebar && (
+            <nav class="sidebar print:hidden" aria-label={Astro.locals.t('sidebarNav.accessibleLabel')}>
+                <MobileMenuToggle {...Astro.props} />
+                <div id="starlight__sidebar" class="sidebar-pane">
+                    {/* <div class="sidebar-pane-hover-space"></div> */}
+                    <div class="sidebar-content sl-flex">
+                        <slot name="sidebar" />
+                    </div>
+                </div>
+            </nav>
+        )
+    }
+    <div class="main-frame"><slot /></div>
+</div>
+
+<style>
+    .page {
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .header {
+        z-index: var(--sl-z-index-navbar);
+        position: fixed;
+        inset-inline-start: 0;
+        inset-block-start: 0;
+        width: 100%;
+        height: var(--sl-nav-height);
+        border-bottom: 1px solid var(--sl-color-hairline-shade);
+        padding: var(--sl-nav-pad-y) var(--sl-nav-pad-x);
+        padding-inline-end: var(--sl-nav-pad-x);
+        background-color: var(--sl-color-bg-nav);
+    }
+
+    :global([data-has-sidebar]) .header {
+        padding-inline-end: calc(var(--sl-nav-gap) + var(--sl-nav-pad-x) + var(--sl-menu-button-size));
+    }
+
+
+    .sidebar-pane {
+        visibility: var(--sl-sidebar-visibility, hidden);
+        position: fixed;
+        z-index: var(--sl-z-index-menu);
+        inset-block: var(--sl-nav-height) 0;
+        inset-inline-start: 0;
+        width: 100%;
+        background-color: var(--sl-color-black);
+        overflow-y: auto;
+    }
+
+    /* モバイルメニューを開いた時にsidebarを表示する */
+    :global([aria-expanded='true']) ~ .sidebar-pane {
+        --sl-sidebar-visibility: visible;
+    }
+
+    .sidebar-content {
+        height: 100%;
+        min-height: max-content;
+        padding: 1rem var(--sl-sidebar-pad-x) 0;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    @media (min-width: 50rem) {
+        .sidebar-content::after {
+            content: '';
+            padding-bottom: 1px;
+        }
+    }
+
+    .main-frame {
+        padding-top: calc(var(--sl-nav-height) + var(--sl-mobile-toc-height));
+        /* padding-inline-start: var(--sl-content-inline-start); */
+    }
+
+    /* 50rem is the breakpoint for the sidebar */
+    @media (min-width: 50rem) {
+        :global([data-has-sidebar]) .header {
+            padding-inline-end: var(--sl-nav-pad-x);
+        }
+        .sidebar-pane {
+            --sl-sidebar-visibility: visible;
+            /* width: var(--sl-sidebar-width); */
+            /* 通常時にはsidebarを非表示にするが、画面の左側にカーソルが入った時に上記の幅になるような css なのか js なのか実装方法について教えてください。 */
+            width: 0;
+            background-color: var(--sl-color-bg-sidebar);
+            border-inline-end: 1px solid var(--sl-color-hairline-shade);
+            position: fixed;
+            left: 0;
+            top: var(--sl-nav-height);
+            bottom: 0;
+            transition: width 0.3s ease;
+            /* overflow: hidden; */
+
+            &.expanded {
+                width: var(--sl-sidebar-width,);
+            }
+
+        }
+    }
+</style>
+
+<!-- <script is:inline>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebarPane = document.querySelector('.sidebar-pane');
+        if (!sidebarPane) return;
+
+        // CSS変数 --sl-sidebar-width をドキュメントルートから取得
+        let sidebarWidthVar = getComputedStyle(document.documentElement)
+            .getPropertyValue('--sl-sidebar-width')
+            .trim(); // 結果は例として "300px" のような文字列
+
+        console.log(sidebarWidthVar);
+
+
+        // "300px" の "300" 部分を数値に変換
+        const sidebarThreshold = parseFloat(sidebarWidthVar);
+
+        function handleMouseMove(event) {
+            // const threshold = window.innerWidth * 0.25;
+            if (event.clientX < sidebarThreshold * 1.05) {
+                sidebarPane.classList.add('expanded');
+            } else {
+                sidebarPane.classList.remove('expanded');
+            }
+        }
+        document.addEventListener('mousemove', handleMouseMove);
+    });
+</script> -->
