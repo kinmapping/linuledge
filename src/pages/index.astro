@@ -1,10 +1,12 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-// import CustomComponent from './CustomComponent.astro';
 ---
 
-<StarlightPage frontmatter={{ title: '私のカスタムページ' }}>
-  <p>これはカスタムコンポーネントを用いたカスタムページです:</p>
-    <!-- ここに src/content/docs のトップページのパスを表示する。 -->
-  <!-- <CustomComponent /> -->
+<StarlightPage frontmatter={{ title: 'TOP ページ' }}>
+    <ul>
+        <li>
+            <a href="/astro-starlight">Astro Starlight</a>
+        </li>
+    </ul>
+
 </StarlightPage>

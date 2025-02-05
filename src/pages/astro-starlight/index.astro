@@ -1,0 +1,40 @@
+---
+import type { AstroContentModule } from '@/type';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Table from '@components/Table.astro';
+
+const modules = import.meta.glob<AstroContentModule>(
+    '../../content/docs/astro-starlight/**/*.{md,mdx}',
+    {
+        eager: true,
+    },
+);
+
+// 各モジュールから frontmatter.title と url を抽出
+const articles = Object.values(modules).map(module => {
+    let url = module.url;
+    // "src/content/docs" を削除
+    url = url.replace(/^src\/content\/docs/, '');
+    // .md または .mdx を削除
+    url = url.replace(/\.(mdx|md)$/, '');
+    return {
+        title: module.frontmatter.title,
+        url,
+    };
+});
+
+// console.log(articles);
+---
+
+<StarlightPage frontmatter={{ title: 'Astro Starlight' }}>
+    <h1>Astro Starlight 記事一覧</h1>
+    <!-- ここに src/content/docs/astro-starlight/ 配下の記事一覧の目次のようなものを表示する。 -->
+    <Table
+        columns={['タイトル']}
+        data={
+            articles.map(article => [
+                `<a href="${article.url}">${article.title}</a>`,
+            ])
+        }
+    />
+</StarlightPage>
