@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState } from 'react';
 
 interface IpRange {
     networkAddress: string;
@@ -79,7 +79,7 @@ const IpCalculator = () => {
         }
     };
 
-    const handleInputChange = (id: number, e: Event) => {
+    const handleInputChange = (id: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const target = e.target as HTMLInputElement | null;
         if (!target) return;
 

@@ -68,6 +68,9 @@
 
     "[typescript][javascript][html][typescriptreact][javascriptreact][json][eslintrc][astro]": {
         "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
         "editor.codeActionsOnSave": {
             "source.fixAll.eslint": "explicit"
         }

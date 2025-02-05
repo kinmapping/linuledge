@@ -1,5 +1,5 @@
 import mermaid from 'mermaid';
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function ThemeReactMermaid({ src }: { src: string }) {
     const mermaidRef = useRef<HTMLDivElement>(null);
@@ -93,7 +93,7 @@ export default function ThemeReactMermaid({ src }: { src: string }) {
 
     return (
         <>
-            <div ref={mermaidRef} class='my-4 rounded-lg border border-solid p-4'>
+            <div ref={mermaidRef} className='my-4 rounded-lg border border-solid p-4'>
                 {src}
             </div>
             {/* <div

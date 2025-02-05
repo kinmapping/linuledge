@@ -168,6 +168,11 @@
     "overrides": [
         {
             "include": ["**/*.astro"],
+            "formatter": {
+                "enabled": true,
+                "indentWidth": 4,
+                "indentStyle": "space"
+            },
             "linter": {
                 "rules": {
                     "correctness": {

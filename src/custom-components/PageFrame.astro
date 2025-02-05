@@ -7,11 +7,18 @@ import MobileMenuToggle from '@custom-components/MobileMenuToggle.astro';
 const { hasSidebar } = Astro.props;
 ---
 
+<!--
+Astro.locals.t について
+Astro 渡しのローカルオブジェクトの中にある t 関数は、
+与えられたキー（この場合は 'sidebarNav.accessibleLabel'）をもとに、
+ユーザーの言語設定に応じた翻訳済みテキストを返します。
+-->
 <div class="page sl-flex">
-    <header class="header"><slot name="header" /></header>
-    {
-        hasSidebar && (
-            <nav class="sidebar print:hidden" aria-label={Astro.locals.t('sidebarNav.accessibleLabel')}>
+    <header class="header">
+        <slot name="header" />
+        {
+            hasSidebar && (
+                <nav class="sidebar print:hidden" aria-label={Astro.locals.t('sidebarNav.accessibleLabel')}>
                 <MobileMenuToggle {...Astro.props} />
                 <div id="starlight__sidebar" class="sidebar-pane">
                     {/* <div class="sidebar-pane-hover-space"></div> */}
@@ -22,6 +29,7 @@ const { hasSidebar } = Astro.props;
             </nav>
         )
     }
+    </header>
     <div class="main-frame"><slot /></div>
 </div>
 
@@ -36,7 +44,7 @@ const { hasSidebar } = Astro.props;
         position: fixed;
         inset-inline-start: 0;
         inset-block-start: 0;
-        width: 100%;
+        width: calc(100% - var(--sl-menu-button-size) - var(--sl-nav-pad-x));
         height: var(--sl-nav-height);
         border-bottom: 1px solid var(--sl-color-hairline-shade);
         padding: var(--sl-nav-pad-y) var(--sl-nav-pad-x);
@@ -90,52 +98,12 @@ const { hasSidebar } = Astro.props;
         :global([data-has-sidebar]) .header {
             padding-inline-end: var(--sl-nav-pad-x);
         }
-        .sidebar-pane {
+
+        /* .sidebar-pane {
             --sl-sidebar-visibility: visible;
-            /* width: var(--sl-sidebar-width); */
-            /* 通常時にはsidebarを非表示にするが、画面の左側にカーソルが入った時に上記の幅になるような css なのか js なのか実装方法について教えてください。 */
-            width: 0;
+            width: var(--sl-sidebar-width);
             background-color: var(--sl-color-bg-sidebar);
             border-inline-end: 1px solid var(--sl-color-hairline-shade);
-            position: fixed;
-            left: 0;
-            top: var(--sl-nav-height);
-            bottom: 0;
-            transition: width 0.3s ease;
-            /* overflow: hidden; */
-
-            &.expanded {
-                width: var(--sl-sidebar-width,);
-            }
-
-        }
+        } */
     }
 </style>
-
-<!-- <script is:inline>
-    document.addEventListener('DOMContentLoaded', () => {
-        const sidebarPane = document.querySelector('.sidebar-pane');
-        if (!sidebarPane) return;
-
-        // CSS変数 --sl-sidebar-width をドキュメントルートから取得
-        let sidebarWidthVar = getComputedStyle(document.documentElement)
-            .getPropertyValue('--sl-sidebar-width')
-            .trim(); // 結果は例として "300px" のような文字列
-
-        console.log(sidebarWidthVar);
-
-
-        // "300px" の "300" 部分を数値に変換
-        const sidebarThreshold = parseFloat(sidebarWidthVar);
-
-        function handleMouseMove(event) {
-            // const threshold = window.innerWidth * 0.25;
-            if (event.clientX < sidebarThreshold * 1.05) {
-                sidebarPane.classList.add('expanded');
-            } else {
-                sidebarPane.classList.remove('expanded');
-            }
-        }
-        document.addEventListener('mousemove', handleMouseMove);
-    });
-</script> -->

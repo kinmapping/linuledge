@@ -68,7 +68,7 @@
 
     --code-background: hsla(0, 0%, 12%, 0.75); /* default: #1e1e1e */
 
-    --sl-sidebar-width: 18rem;
+    --sl-sidebar-width: 0px;
     --sl-content-width: 100%;
 
     --scale-factor: 0.9;

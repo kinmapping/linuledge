@@ -1,0 +1,27 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import { MDXProvider } from '@mdx-js/react';
+
+import '@astrojs/starlight/style/markdown.css';
+
+import { FileTree, LinkCard, Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+import LinkPreview from '@components/LinkPreview.astro';
+import MermaidChart from '@components/MermaidChart.astro';
+import Table from '@components/Table.astro';
+
+export const components = {
+    LinkCard,
+    Tabs,
+    TabItem,
+    Steps,
+    FileTree,
+    LinkPreview,
+    MermaidChart,
+    Table,
+};
+---
+<MDXProvider components={components}>
+    <div class="sl-markdown-content">
+        <slot />
+    </div>
+</MDXProvider>

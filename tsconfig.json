@@ -10,20 +10,25 @@
             "@pages/*": ["src/pages/*"],
             "@assets/*": ["src/assets/*"],
             "@utils/*": ["src/utils/*"],
-            "@config": ["src/config"]
+            "@config": ["src/config"],
+            "@custom-components/*": ["src/custom-components/*"],
+            "@custom-user-components/*": ["src/custom-user-components/*"]
         },
         "types": ["astro/client"],
 
         // "types": ["astro/client", "@astrojs/starlight/types"],
         "jsx": "react-jsx",
-        "jsxImportSource": "preact",
+        "jsxImportSource": "react",
         "verbatimModuleSyntax": true
+        // "typeRoots": ["./src/types", "./node_modules/@types"]
         // "esModuleInterop": true
     },
     "include": [
         "astro.config.mjs",
         "src",
-        "db"
+        "db",
+        "@astrojs/starlight/types",
+        "astro-typings.d.ts"
         // "src/**/*.ts",
         // "src/**/*.d.ts",
         // "src/**/*.astro"
