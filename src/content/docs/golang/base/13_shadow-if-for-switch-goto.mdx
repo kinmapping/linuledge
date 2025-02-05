@@ -661,6 +661,8 @@ for i := 1; i < len(evenVals) - 1; i++ {
 
 ## switch 文
 
+### switch 文の基本構文
+
 ほかの言語でも switch 文は存在しますが、Go の switch 文は他の言語とは少し異なります。
 switch 文の基本構文は以下の通りです。
 
@@ -680,6 +682,9 @@ default:
 - フォールスルーがない
 - ブロック内で利用する変数を宣言できる
 - 型アサーションがない
+- switch と case のインデントは同じ深さになる
+
+#### 一番シンプルな switch 文
 
 ```go
 switch 1 {
@@ -694,7 +699,11 @@ default:
 // 1
 ```
 
-このように、case には式がなく、case の値が一致した場合に処理が実行されます。
+#### 変数宣言を利用した switch 文
+
+`switch 変数宣言; 一致する値` で変数宣言して、その値と case の値が一致した場合に処理が実行されます。
+しかし、Go 言語の switch 文はもう少し、器用です。
+以下は、複数の値を case で一度に評価する例です。
 
 ```go showLineNumbers {12, 13, 17}
 package main
@@ -784,3 +793,252 @@ A[1] --> B[2]
 B --> C[3]
 C --> D[4]
 ```
+
+:::
+
+### ブランク switch
+
+ブランク switch は、case 節に式がない switch 文です。
+通常の swich では値が一致するかを case 節で評価しますが、ブランク switch では論理式での評価ができます。
+
+```go showLineNumbers {3} /wordLen\s*[<>]=?\s*\d+/
+words := []string{"hi", "salutations", "hello"}
+for _, word := range words {
+	switch wordLen := len(word); { // 比較対象の変数の指定なし
+  // 論理式での評価ができる
+	case wordLen < 5:
+		fmt.Println(word, "は短い単語です")
+	case wordLen > 10:
+		fmt.Println(word, "は長すぎる単語です")
+	default:
+		fmt.Println(word, "はちょうどよい長さの単語です")
+	}
+}
+```
+
+```txt
+hi は短い単語です
+salutations は長すぎる単語です
+hello はちょうどよい長さの単語です
+```
+
+<Steps>
+
+1. 3 行目で switch ブロック内で利用する変数 `wordLen` を宣言していますが、一致する値を空にしていて渡していません。
+
+1. case 節内で宣言した `wordLen` を利用した論理式で評価します。
+
+</Steps>
+
+ブランク switch は完全一致する値に対しての論理式での利用は控えるべきです。  
+以下のような書き方は適していないです。
+
+```go
+switch a := 1; {
+case a == 1:
+  fmt.Println("1")
+case a == 2:
+  fmt.Println("2")
+default:
+  fmt.Println("default")
+}
+```
+
+### break を使う時
+
+[break の利用方法](/golang/base/13_shadow-if-for-switch-goto/#break-と-continue)は for 文で述べたとおりです。
+
+switch で break を使う時は、ループ処理内で、switch を利用している場合です。
+
+```go
+outer:
+  for _, word := range words {
+    switch wordLen := len(word); {
+    case wordLen < 5:
+      fmt.Println(word, "は短い単語です")
+    case wordLen > 10:
+      fmt.Println(word, "は長すぎる単語です")
+      break outer
+    default:
+      fmt.Println(word, "はちょうどよい長さの単語です")
+    }
+  }
+```
+
+case での条件にマッチしたら即座にループから抜け出すときに利用できます。これは無駄な ループ処理、線形探索での探索が終了した時に利用するなどが挙げられます。
+
+#### break を使う時の注意点
+
+```go
+for i := 0; i < 10; i++ {
+		switch {
+		case i%2 == 0:
+			fmt.Println(i, ": 偶数")
+		case i%3 == 0:
+			fmt.Println(i, ": 3で割り切れるが2では割り切れない")
+		case i%7 == 0:
+			fmt.Println(i, ": ループ終了...はしない！")
+			break
+		default:
+			fmt.Println(i, ": 退屈な数")
+		}
+	}
+```
+
+こちらを実行すると、以下の出力結果になります。
+
+```txt
+0 : 偶数
+1 : 退屈な数
+2 : 偶数
+3 : 3で割り切れるが2では割り切れない
+4 : 偶数
+5 : 退屈な数
+6 : 偶数
+7 : ループ終了...はしない！
+8 : 偶数
+9 : 3で割り切れるが2では割り切れない
+```
+
+これは beak をただ入れるだけでは、case から抜け出すだけで、ループを抜けることはできません。ループから抜け出すには、ラベルを利用して、ループを抜けるようにします。
+
+```go
+loop:
+	for i := 0; i < 10; i++ {
+		switch {
+		case i%2 == 0:
+			fmt.Println(i, ": 偶数")
+		case i%3 == 0:
+			fmt.Println(i, ": 3で割り切れるが2では割り切れない")
+		case i%7 == 0: //liststart2
+			fmt.Println(i, ": ループ終了！")
+			break loop //listend2
+		default:
+			fmt.Println(i, ": 退屈な数")
+		}
+	}
+```
+
+```txt
+0 : 偶数
+1 : 退屈な数
+2 : 偶数
+3 : 3で割り切れるが2では割り切れない
+4 : 偶数
+5 : 退屈な数
+6 : 偶数
+7 : ループ終了！
+```
+
+:::note[if か switch か]
+
+機能面で見た場合に、if も switch も同じです。
+そのため、どちらを使うかは各条件の文に関連性があるかどうかで判断しましょう。
+
+以下の if 文の条件は n に対する評価値になっていますので、switch で表現するべきでしょう。
+
+```go
+rand.Seed(time.Now().UnixNano()) // シードの指定
+n := rand.Intn(10) // 0以上10未満の整数を戻す
+if n == 0 {
+	fmt.Println("少し小さすぎます:", n)
+} else if n > 5 {
+	fmt.Println("大きすぎます:", n)
+} else {
+	fmt.Println("いい感じの数字です:", n)
+}
+```
+
+swich に置き換え
+
+```go
+rand.Seed(time.Now().UnixNano())
+switch n := rand.Intn(10) {
+case n == 0:
+	fmt.Println("少し小さすぎます:", n)
+case n > 5:
+	fmt.Println("大きすぎます:", n)
+default:
+	fmt.Println("いい感じの数字です:", n)
+}
+```
+
+関連性のない条件(case)がある場合は、if 文で表現した方が良いでしょう。
+
+:::
+
+## goto
+
+古の制御フローとも思われる goto 文は Go 言語に存在していますが、利用用途はかなり限られてくると言っていいでしょう。
+
+[Go To Statement Considered Harmful](https://homepages.cwi.nl/~storm/teaching/reader/Dijkstra68.pdf)
+
+goto はプログラムの中のどこにでもジャンプできてしまうため、流れを追うのが難しくなります。
+
+```go
+func main() {
+	a := 10
+	goto skip
+	b := 20 // goto skip jumps over declaration of b at ./prog.go:10:4
+skip:
+	c := 30
+	fmt.Println(a, b, c)
+	if c > a {
+		goto inner // goto inner jumps into block starting at ./prog.go:17:11
+	}
+	if a < b {
+	inner:
+		fmt.Println("aはbより小さい")
+	}
+}
+```
+
+このプログラムを実行すると、以下のようなエラーが発生します。
+
+```txt
+goto skip jumps over declaration of b at ./prog.go:10:4
+goto inner jumps into block starting at ./prog.go:17:11
+```
+
+基本的にこのような使い方は break や continue をつかって実現できます。
+
+例外的に goto を利用できるパターンを見てみましょう
+
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
+
+func main() {
+	rand.Seed(time.Now().Unix()) // シードの指定
+	a := rand.Intn(10)
+	for a < 100 {
+		fmt.Println(a)
+		if a%5 == 0 {
+			goto done
+		}
+		a = a*2 + 1
+	}
+	fmt.Println("ループが通常終了したときに行う処理を実行")
+done:
+	fmt.Println("ループが終わったときに必ず行う処理を実行")
+	fmt.Println(a)
+}
+```
+
+```txt
+3
+7
+15
+ループが終わったときに必ず行う処理を実行
+15
+```
+
+実際に goto を利用しているコードを見てみましょう。
+[floatBits](https://github.com/golang/go/blob/842e4b5207003db692d72a1aeba4f164bbeb1c13/src/strconv/atof.go#L314) では、goto を利用しています。
+
+フラグを利用して、goto の代わりに for を使うのも同様かそれ以上に保守しづらい状況になるのであれば、goto を利用した方が良いでしょう。

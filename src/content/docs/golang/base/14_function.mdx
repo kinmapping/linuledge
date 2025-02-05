@@ -14,6 +14,436 @@ sidebar:
   #     variant: tip
 ---
 
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
 ## 関数
 
-関数は、引数を受け取り、処理を行い、結果を返すものです。
+### 関数の基本
+
+すべての GO プロブラムの実行開始場所として main 関数が存在します。
+
+```go
+func main() {
+	fmt.Println("Hello, World!")
+}
+```
+
+函数 main は何も返さない、引数も必要ありません。引数を取り、値を返す函数を見てみましょう。
+
+```go
+package main
+
+import "fmt"
+
+
+func add(a int, b int) int {
+	return a + b
+}
+
+func main() {
+	result := add(1, 2)
+	fmt.Println(result) // 3
+}
+```
+
+関数の書き方は以下となります。
+
+```go
+func 関数名(引数1 型, 引数2 型) 返り値の型 {
+	//処理
+	return 返り値
+}
+
+// 引数が同じ型の場合
+func add(a , b int) int {
+	return a + b
+}
+```
+
+- 引数に型定義は必須です。
+- 関数が何も返す必要なければ、return を省略できます
+- 関数名は小文字で始めることも大文字で始めることも可能です。
+
+### 名前付き引数とオプション引数
+
+他のプログラミング言語において、引数が必要な関数を呼び出す時に、名前付きで引数を指定できたり、関数宣言側で定義している引数を呼び出し側では必ずしも引数として渡す必要がなかったりします。
+Go にはもともと名前付き引数やオプション引数の機能はありませんが、以下のようなパターンで疑似的に実現できます。
+
+```go
+package main
+
+import "fmt"
+
+type MyFuncOpts struct { // MyFuncのオプション引数
+	FirstName string
+	LastName string
+	Age int
+}
+
+func MyFunc(opts MyFuncOpts) error {
+	fmt.Println(opts)
+	fmt.Println("【ここで必要な処理を行う】")
+	return nil
+}
+
+func main() {
+	MyFunc(MyFuncOpts {
+		LastName: "Patel",
+		Age: 50,
+	})
+	MyFunc(MyFuncOpts {
+		FirstName: "Joe",
+		LastName: "Smith",
+	})
+}
+```
+
+```txt
+{ Patel 50}
+【ここで必要な処理を行う】
+{Joe Smith 0}
+【ここで必要な処理を行う】
+```
+
+構造体リテラルを利用して、関数に渡す引数を「名前付き」かつ「オプション扱い」にして、引数を任意でまたは順番を変えて渡す形式を実現できます。
+
+#### 名前付き引数
+
+関数に渡す複数のパラメータを、個々のフィールドに分けた構造体 (ここでは `MyFuncOpts`) として定義しています。
+呼び出し側では、構造体リテラルの中で `FirstName` や `LastName`、`Age` といったフィールド名を指定して値を渡すため、どの値がどの引数に対応するかが明示されます。
+
+:::note[Python での名前付き引数の例]
+
+```python
+def greet(first_name, last_name):
+    print(f"Hello, {first_name} {last_name}!")
+
+greet(last_name="Doe", first_name="John")
+```
+
+順番に関係なく first_name と last_name を指定できるのが名前付き引数です。
+:::
+
+#### オプション引数
+
+必ずしもすべてのフィールドを設定する必要はなく、使いたい項目だけを記述できます。
+未指定の場合、構造体の各フィールドは Go のゼロ値（文字列なら空文字、数値なら 0）が利用されるため、実質的に「オプション扱い」として機能します。
+具体的な例では、1 つ目の呼び出しでは `LastName` と `Age` のみを指定しており、`FirstName` は未指定のため空文字となります。2 つ目では `FirstName` と `LastName` のみ指定しています。
+これにより、それぞれの呼び出しで必要なパラメータだけを記述でき、呼び出し時の可読性や柔軟性が向上します。
+このパターンは、**引数が多くなった場合やデフォルト値が必要な場合**に便利です。
+
+:::caution[シンプルな関数をつくれ!]
+Go の思想としては、名前付き引数やオプション引数がなくても実質的に問題はないと思っています。そもそも関数は多くの引数を持つべきではありません。
+名前付き引数、オプション引数が必要な関数はその作りが複雑で、目的がわかりにくい状態となっていると考えていいかもしれません。
+:::
+
+### 可変長引数(Variadic Parameters)とスライス
+
+可変長引数は、関数の引数の数が不定な場合に使用されます。  
+可変長引数の条件は以下となります。
+
+- 引数の数が不定となる
+- 可変長引数の型はスライスで、その値は同じ型
+- 可変長引数は関数の最後の引数となる
+
+以下のように、関数の引数に `...` をつけることで可変長引数を定義できます。
+
+```go
+func sum(nums ...int) int {
+	total := 0
+	for _, num := range nums {
+		total += num
+	}
+	return total
+}
+```
+
+いろいろな呼び出し方をみてみましょう
+
+```go showLineNumbers
+func addTo(base int, vals ...int) []int {
+	out := make([]int, 0, len(vals))
+	for _, v := range vals {
+		out = append(out, base+v)
+	}
+	return out
+}
+
+func main() {
+	fmt.Println(addTo(3))  // []
+	fmt.Println(addTo(3, 2)) // [5]
+	fmt.Println(addTo(3, 2, 4, 6, 8)) // [5 7 9 11]
+	a := []int{4, 3}
+	fmt.Println(addTo(3, a...)) // [7 6]
+	fmt.Println(addTo(3, []int{1, 2, 3, 4, 5}...)) // [4 5 6 7 8]
+	// fmt.Println(addTo(3, a))  ←コンパイル時のエラー
+	// fmt.Println(addTo(3, []int{1, 2, 3, 4, 5}))  ←コンパイル時のエラー
+}
+
+```
+
+可変長引数はスライスに変換されるので、スライスとして渡すこともできます。しかし、渡す変数やスライスリテラルの後に、`...` をつける必要があります。
+
+<Steps>
+
+1. 16 行目の実行では、`cannot use a (variable of type []int) as int value in argument to addTo` というエラーが発生します。
+   - これは、`addTo` 関数の引数が ([]int 型の変数を) int 型の値として使用することはできません。
+2. 17 行目の実行では、`cannot use []int{…} (value of type []int) as int value in argument to addTo` というエラーが発生します。
+   - これは、`addTo` 函数の引数で、`[]int{...}`（[]int 型の値）を int 型の値として使用できない。
+
+</Steps>
+
+### 複数の戻り値
+
+以下の例は複数の値を返す関数の例です。
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"os"
+)
+
+// 戻り値に商と余りを返す関数
+func divAndRemainder(numerator, denominator int) (int, int, error) {
+	if denominator == 0 {
+		return 0, 0, errors.New("0での除算はできません")
+	}
+	return numerator / denominator, numerator % denominator, nil
+}
+
+func main() {
+	result, remainder, err := divAndRemainder(5, 2)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	fmt.Println(result, remainder) // 2 1
+}
+```
+
+関数 divAndRemainder は、商と余りを返す他に、割る数(分母)が 0 の場合はエラーを返します。  
+それらの戻り値を関数定義の戻り値の部分で `(int, int, error)` として定義しています。
+
+エラーについては[エラー処理](/golang/base/17_error-excep/)にて詳しく解説します。問題なく error 型の値を返さない場合は、`nil` を返します。
+戻り値に error 型を指定している場合は、error または nil を返す必要があります。
+
+`result, remainder, err := divAndRemainder(5, 2)` のように書いて、多重代入で戻り値を受け取ることができます。
+
+### 戻り値の扱い
+
+#### Python との比較
+
+Python では関数がタプル型を返すことができ、タプルは複数の変数に別々に代入できます。
+
+```python
+def div_and_remainder(n,d):  # 関数の定義の始まり
+    if d == 0:
+        raise Exception("0での除算はできません")
+    return n / d, n % d      # 関数の定義終わり
+
+v = div_and_remainder(5,2)   # mainの始まり
+print(v)  # (2.5, 1)
+```
+
+Go では、関数の戻り値をそれぞれの変数に代入しなければならないのですが、Python ではタプルをそのまま受け取ることができます。
+
+#### 戻り値を無視する
+
+関数を呼び出しても、すべての戻り値を使うわけではない場合、戻り値を無視することができます。
+
+```go
+result, _ := divAndRemainder(5, 2)
+```
+
+このように、`_` を使って戻り値を無視することができます。
+また、戻り値を完全に無視することもできます。
+
+```go
+// ただ実行するだけ
+divAndRemainder(5, 2)
+```
+
+戻り値は破棄されます。実は `fmt.Println` も戻り値を破棄しています。
+ただ、戻り値を明示的にブランクとして使用しないことがイディオム的であったりもします。
+
+#### 名前付き戻り値
+
+名前付き戻り値は、関数の戻り値に名前をつけることができる機能です。
+
+```go
+func divAndRemainder(numerator int, denominator int) (result int, remainder int,
+	err error) {
+	if denominator == 0 {
+		return numerator, denominator, errors.New("0で割ることはできません")
+	}
+  // 変数は戻り値の指定の部分で宣言しているため、いきなり変数に代入できる
+	result, remainder = numerator/denominator, numerator%denominator
+	return result, remainder, err
+}
+```
+
+関数の戻り値を指定する部分に、`,` で区切って名前と型を列挙して`()`で囲みます。  
+名前付き戻り値はゼロ値に初期化されます。
+
+```go
+func main() {
+  x, y, z := divAndRemainder(5, 2)
+  fmt.Println(x, y, z) // 2 1 <nil>
+}
+```
+
+名前付き戻り値は、関数の中では変数として扱われます。  
+そのため、関数の中では `result` や `remainder` といった名前で参照できます。  
+また、関数の戻り値をそのまま返すこともできます。
+
+名前付き戻り値を利用するということは、関数が返す値がその名前付き戻り値だと勘違いしてしまいます。
+
+```go showLineNumbers {10, 14, 19}
+package main
+
+import (
+	"fmt"
+	"errors"
+)
+
+func divAndRemainder(numerator int, denominator int) (result int, remainder int,
+	err error) {
+	result, remainder = 20, 30  // 適当な値を代入
+	if denominator == 0 {
+		return numerator, denominator, errors.New("0で割ることはできません")
+	}
+	return numerator/denominator, numerator%denominator, nil
+}
+
+func main() {
+	rs, rm, _ := divAndRemainder(5,2)
+	fmt.Println(rs, rm) // 2 1
+}
+
+```
+
+<Steps>
+
+1. 10 行目では、`result, remainder = 20, 30` として名前付き戻り値に値を代入しています。
+
+1. 14 行目では、`return numerator/denominator, numerator%denominator, nil` として名前付き戻り値を指定せずそのまま返しています。
+
+1. もし、return の戻り値ではなく、名前付き戻り値を返しているのであれば、19 行目の呼び出しは 20 と 30 を返すことになります。
+
+1. しかし、出力結果 は 2 と 1 となります。
+
+1. これは、名前付き戻り値は処理の中であらかじめ定義した変数であるという役割だけで、その変数を使って返すことを強制しているわけではないためです。
+
+</Steps>
+
+名前付き戻り値はプログラムの説明的な用途として利用することになるため、可読性が高いと認識してしまうこともあるかもしれませんが、上記の挙動を見ると必ずしも返却値とその名前が一致しているわけではないようです。そのため、利用用途は限定されそうです。
+普段は名前付き関数は使わない方がよいでしょう。
+
+#### ブランク return
+
+名前付き戻り値を使うと、戻り値を指定せずに `return` だけを使うこともできます。
+
+```go
+func divAndRemainder(numerator int, denominator int) (result int, remainder int,
+	err error) {
+	if denominator == 0 {
+		err = errors.New("0で割ることはできません")
+		return
+	}
+	result, remainder = numerator/denominator, numerator%denominator
+	return // return を書かないとコンパイルエラーになる
+}
+
+func main() {
+	rs, rm, _ := divAndRemainder(5, 2)
+	fmt.Println(rs, rm)
+}
+```
+
+ブランク return は記述量が一見減ってみやすいと思うかもしれませんが、データの流れを理解するのは難しくなります。
+関数が値を返すのであれば、ブランク return を使うのは避け、`return 戻り値` として記述することが推奨です。
+
+## 関数も値
+
+関数も値として利用できます。キーワード `func` と引数、戻り値の型によって決定する値(この組み合わせを関数のシグネチャといいます)です。
+もし、関数が二つあり、このシグネチャが同じであれば、その関数同士は同じ型として扱えます。
+
+### 関数を値として使う例
+
+map の値として関数を使い、原始的な計算機を作成する例を見てみましょう。
+
+```go
+func add(i int, j int) int { return i + j }
+
+func sub(i int, j int) int { return i - j }
+
+func mul(i int, j int) int { return i * j }
+
+func div(i int, j int) int { return i / j }
+```
+
+これらの関数は、それぞれ同じシグネチャを持っているため、同じ型として扱えます。
+次にそれぞれの演算子と関数を関連づける map を作成します。
+キーが string 型、値が関数型シグネチャとなります。
+
+```go
+var opMap = map[string]func(int, int) int{
+	"+": add,
+	"-": sub,
+	"*": mul,
+	"/": div,
+}
+```
+
+計算式を試す数式(expressions)を作成します。
+
+```go
+expressions := [][]string{ //liststart3
+	[]string{"2", "+", "3"},
+	[]string{"2", "-", "3"},
+	[]string{"2", "*", "3"},
+	[]string{"2", "/", "3"},
+	[]string{"2", "%", "3"},
+	[]string{"two", "+", "three"},
+	[]string{"2", "+", "three"},
+	[]string{"5"},
+}
+
+fmt.Println("expressions:", expressions)
+// [[2 + 3] [2 - 3] [2 * 3] [2 / 3] [2 % 3] [two + three] [2 + three] [5]]
+```
+
+expressions の文字列配列を回して、
+
+```go
+for _, expression := range expressions {
+	if len(expression) != 3 { // 演算子と被演算子の合計個数のチェック
+		fmt.Print(expression , " -- 不正な式です\n")
+		continue
+	}
+	p1, err := strconv.Atoi(expression[0]) // 1番目の被演算子のチェック
+	if err != nil {
+		fmt.Print(expression, " -- ", err, "\n")
+		continue
+	}
+	op := expression[1]   // 演算子のチェック
+	opFunc, ok := opMap[op]
+	if !ok {
+		fmt.Print(expression, " -- ", "定義されていない演算子です: ", op, "\n")
+		continue
+	}
+	p2, err := strconv.Atoi(expression[2])  // 2番目の被演算子のチェック
+	if err != nil {
+		fmt.Print(expression, " -- ", err, "\n")
+		continue
+	}
+	result := opFunc(p1, p2) // 実際の計算
+	fmt.Print(expression, " → ", result, "\n")
+}
+```
