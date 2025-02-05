@@ -64,6 +64,7 @@ import Icon from '@custom-user-components/Icon.astro';
     button {
         position: fixed;
         top: calc((var(--sl-nav-height) - var(--sl-menu-button-size)) / 2);
+        left: calc((var(--sl-nav-height) - var(--sl-menu-button-size)) / 2 + 0.5rem);
         inset-inline-end: var(--sl-nav-pad-x);
         z-index: var(--sl-z-index-navbar);
         border: 0;
@@ -71,14 +72,17 @@ import Icon from '@custom-user-components/Icon.astro';
         width: var(--sl-menu-button-size);
         height: var(--sl-menu-button-size);
         padding: 0.5rem;
-        background-color: var(--sl-color-white);
+        background-color: transparent;
+        /* background-color: var(--sl-color-white); */
         color: var(--sl-color-black);
         box-shadow: var(--sl-shadow-md);
         cursor: pointer;
+        /* transform: translateY(calc(var(--sl-nav-height) + var(--sl-mobile-toc-height))); */
     }
 
     [aria-expanded='true'] button {
-        background-color: var(--sl-color-gray-2);
+        /* background-color: var(--sl-color-gray-2); */
+        background-color: transparent;
         box-shadow: none;
     }
 
