@@ -1,0 +1,93 @@
+---
+title: Sidebar コンポーネントのカスタマイズ
+description: Sidebar コンポーネントをカスタマイズ
+tags:
+  - "Astro"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: Sidebar コンポーネントのカスタマイズ
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 2
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+## カスタマイズの概要
+
+Starlight で用意されている Sidebar コンポーネントの css や機能をカスタマイズします。
+
+Starlight で用意されている Sidebar コンポーネントのソースコードは以下です。
+
+```astro title="packages/starlight/components/Sidebar.astro"
+---
+import type { Props } from '../props';
+
+import MobileMenuFooter from 'virtual:starlight/components/MobileMenuFooter';
+import SidebarPersister from './SidebarPersister.astro';
+import SidebarSublist from './SidebarSublist.astro';
+
+const { sidebar } = Astro.props;
+---
+
+<SidebarPersister {...Astro.props}>
+	<SidebarSublist sublist={sidebar} />
+</SidebarPersister>
+
+<div class="md:sl-hidden">
+	<MobileMenuFooter {...Astro.props} />
+</div>
+
+```
+
+関連するコンポーネントは以下です。
+
+- `SidebarPersister.astro`
+- `SidebarSublist.astro`
+- `MobileMenuFooter.astro`
+
+## CustomSidebar コンポーネントの作成
+
+ファイルは `src/components/CustomSidebar.astro` とします。
+
+```astro title="src/components/CustomSidebar.astro"
+---
+import type { Props } from '@astrojs/starlight/props';
+
+import MobileMenuFooter from '@astrojs/starlight/components/MobileMenuFooter.astro';
+import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro';
+import SidebarSublist from '@astrojs/starlight/components/SidebarSublist.astro';
+
+
+const { sidebar } = Astro.props;
+---
+
+<p>CustomSidebar</p>
+<SidebarPersister {...Astro.props}>
+	<SidebarSublist sublist={sidebar} />
+</SidebarPersister>
+
+<div class="md:sl-hidden">
+  <MobileMenuFooter {...Astro.props} />
+</div>
+```
+
+### astro.config.mjs の設定
+
+```js title="astro.config.mjs"
+import { defineConfig } from "astro/config";
+import starlight from "@astrojs/starlight";
+
+export default defineConfig({
+  integrations: [
+    starlight({
+      title: "My Customized Docs",
+      components: {
+        // デフォルトの Sidebar コンポーネントをカスタムコンポーネントに置き換え
+        Sidebar: "./src/components/CustomSidebar.astro",
+      },
+    }),
+  ],
+});
+```

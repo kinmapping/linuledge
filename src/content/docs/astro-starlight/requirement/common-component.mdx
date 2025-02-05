@@ -1,0 +1,63 @@
+---
+title: 共通インポート設定を行うコンポーネント
+description: Sidebar コンポーネントをカスタマイズ
+tags:
+  - "Astro"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: 共通インポート設定を行うコンポーネント
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 2
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+## 共通コンポーネントの作成
+
+ファイルは `src/components/CommonComponent.astro` とします。
+
+```astro title="src/components/CommonComponent.astro"
+---
+import { LinkCard, Tabs, TabItem, Steps, FileTree } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+export const components = {
+  LinkCard,
+  Tabs,
+  TabItem,
+  Steps,
+  FileTree,
+  LinkPreview,
+  MermaidChart
+  Table,
+};
+---
+```
+
+### astro.config.mjs の設定
+
+```js title="astro.config.mjs"
+import { defineConfig } from "astro/config";
+import starlight from "@astrojs/starlight";
+
+export default defineConfig({
+  integrations: [
+    starlight({
+      title: "My Customized Docs",
+      components: {
+        // デフォルトの Sidebar コンポーネントをカスタムコンポーネントに置き換え
+        Sidebar: "./src/components/CustomSidebar.astro",
+      },
+    }),
+  ],
+});
+```

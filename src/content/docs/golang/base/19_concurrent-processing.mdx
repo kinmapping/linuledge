@@ -22,3 +22,21 @@ import Table from "@components/Table.astro";
 ## 並行処理
 
 並行処理は、複数の処理を同時に実行することです。
+
+## チャネル
+
+チャネルは、並行処理でデータを送受信するための機能です。
+
+```go
+ch := make(chan int)
+```
+
+### for-range とチャネル
+
+for-range 文は、チャネルから受信した値を取得できます。
+
+```go
+for v := range ch {
+  fmt.Println(v)
+}
+```

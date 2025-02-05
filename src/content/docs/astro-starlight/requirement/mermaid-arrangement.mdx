@@ -2,16 +2,16 @@
 title: Mermaid コンポーネントの修正
 description: Mermaid コンポーネントをテーマに合わせて変更
 tags:
-    - "Astro"
+  - "Astro"
 sidebar:
-    # このリンクのカスタムラベルを設定します
-    label: Mermaid コンポーネントの修正
-    # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
-    order: 2
-    # このリンクにバッジを追加します
-    # badge:
-    #     text: ""
-    #     variant: tip
+  # このリンクのカスタムラベルを設定します
+  label: Mermaid コンポーネントの修正
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 2
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
 ---
 
 import { Steps } from "@astrojs/starlight/components";
@@ -80,7 +80,7 @@ template 要素(タグ)は、html5 から追加された要素です。
 
 ```html
 <template id="template">
-    <p>テンプレート</p>
+  <p>テンプレート</p>
 </template>
 ```
 
@@ -113,49 +113,49 @@ template 要素(タグ)は、html5 から追加された要素です。
 
 ```tsx title="version1"
 import mermaid from "mermaid";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useState } from "react";
 
 export default function ThemeReact({ chart }: { chart: string }) {
-    // const randomMessage = () => messages[Math.floor(Math.random() * messages.length)];
+  // const randomMessage = () => messages[Math.floor(Math.random() * messages.length)];
 
-    // const [greeting, setGreeting] = useState(messages[0]);
-    const [theme, setTheme] = useState(document.documentElement.dataset.theme || "light");
+  // const [greeting, setGreeting] = useState(messages[0]);
+  const [theme, setTheme] = useState(document.documentElement.dataset.theme || "light");
 
-    useEffect(() => {
-        // コールバック関数を定義
-        const observerCallback = (mutationsList: MutationRecord[]) => {
-            for (const mutation of mutationsList) {
-                if (mutation.type === "attributes" && mutation.attributeName === "data-theme") {
-                    const newTheme = document.documentElement.dataset.theme;
-                    setTheme(newTheme || "light");
-                }
-            }
-        };
+  useEffect(() => {
+    // コールバック関数を定義
+    const observerCallback = (mutationsList: MutationRecord[]) => {
+      for (const mutation of mutationsList) {
+        if (mutation.type === "attributes" && mutation.attributeName === "data-theme") {
+          const newTheme = document.documentElement.dataset.theme;
+          setTheme(newTheme || "light");
+        }
+      }
+    };
 
-        // MutationObserverを作成
-        const observer = new MutationObserver(observerCallback);
+    // MutationObserverを作成
+    const observer = new MutationObserver(observerCallback);
 
-        // オプションを設定して監視を開始
-        observer.observe(document.documentElement, { attributes: true });
+    // オプションを設定して監視を開始
+    observer.observe(document.documentElement, { attributes: true });
 
-        // クリーンアップ関数を返す
-        return () => {
-            observer.disconnect();
-        };
-    });
+    // クリーンアップ関数を返す
+    return () => {
+      observer.disconnect();
+    };
+  });
 
-    mermaid.initialize({ startOnLoad: true });
+  mermaid.initialize({ startOnLoad: true });
 
-    const themedChart = `%%{init: {'theme':'${theme}'}}%%\n${chart}`;
+  const themedChart = `%%{init: {'theme':'${theme}'}}%%\n${chart}`;
 
-    return <div>{themedChart}</div>;
+  return <div>{themedChart}</div>;
 }
 ```
 
 {/* <ThemeReact client:only messages={["Hej", "Hallo", "Hola", "Habari"]} /> */}
 
 <MermaidChart
-    chart={`
+  chart={`
     graph TD
         A[開始] --> B{条件分岐}
         B -->|はい| C[処理1]
