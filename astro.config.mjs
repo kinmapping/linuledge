@@ -45,7 +45,7 @@ export default defineConfig({
                 './src/styles/over-w-props.css',
                 './src/tailwind.css',
                 // @font-face CSSファイルへの相対パス
-                './src/fonts/font-face.css',
+                // './src/fonts/font-face.css',
             ],
             editLink: {
                 baseUrl: EDIT_SITE_URL,

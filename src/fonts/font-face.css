@@ -1,8 +1,0 @@
-@font-face {
-    font-family: "Hannari";
-    /* ローカルフォントファイルへの相対パスを`url()`で指定します。 */
-    src: url("./HannariMincho-Regular.otf") format("otf");
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}

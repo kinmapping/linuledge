@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+    font-family: "Hannari";
+    /* ローカルフォントファイルへの相対パスを`url()`で指定します。 */
+    src: url("/fonts/HannariMincho-Regular.otf") format("opentype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+/* @font-face {
+    font-family: "和田研細丸ゴシック";
+    src: url("/fonts/wlmaru2004emojip.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+} */
+
 @layer base {
     .sl-markdown-content h1:not(:where(.not-content *)) {
         @apply text-4xl font-semibold text-accent-600 mb-4;
@@ -11,8 +27,24 @@
             font-semibold
             text-transparent
             bg-clip-text bg-gradient-to-r
-            mb-3
-            from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90%;
+            pl-4
+            py-4
+            mb-4
+            from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90%
+            /* 左 */
+            border-s-4
+            border-l-accent-600
+            /* 上 */
+            border-t-4
+            border-t-accent-600
+            /* 右 */
+            border-r
+            border-r-emerald-900/15
+            /* 下 */
+            border-b
+            border-b-stone-500/15
+            rounded
+            shadow-sbump;
         /* @apply text-3xl font-semibold text-accent-600 mb-3; */
     }
     .sl-markdown-content h3:not(:where(.not-content *)) {

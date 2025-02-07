@@ -4,7 +4,8 @@
 
 html {
     background-color: #f1f5f9;
-    font-family: sans-serif;
+    /* font-family: sans-serif; */
+    /* font-family: "Hannari"; */
     &.dark {
         background-color: #0d0950;
         color: #fff;

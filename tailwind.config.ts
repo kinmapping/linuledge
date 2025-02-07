@@ -36,7 +36,9 @@ export default {
         },
         fontFamily: {
             // 好みのテキストフォント。Starlightはデフォルトでシステムフォントスタックを使用します。
-            sans: ['"Atkinson Hyperlegible"'],
+            sans: ['Hannari'],
+            // sans: ['和田研細丸ゴシック'],
+            // sans: ['"Atkinson Hyperlegible"'],
             // 好みのコードフォント。Starlightはデフォルトでシステムの等幅フォントを使用します。
             mono: ['"IBM Plex Mono"'],
         },
