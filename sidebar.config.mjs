@@ -50,6 +50,22 @@ export default [
         ],
     },
     {
+        label: 'Git',
+        collapsed: true,
+        items: [
+            {
+                label: 'Git の基礎',
+                collapsed: true,
+                autogenerate: { directory: 'git/01_git-base' },
+            },
+            {
+                label: 'Git の応用',
+                collapsed: true,
+                autogenerate: { directory: 'git/02_git-advanced' },
+            },
+        ],
+    },
+    {
         label: 'Go',
         collapsed: true,
         items: [

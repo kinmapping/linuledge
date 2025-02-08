@@ -1,0 +1,115 @@
+---
+title: git remote
+description: git remote についてまとめます
+tags:
+  - "Git"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+
+  label: git remote
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  # order: 50
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+## git remote について
+
+git remote は git リポジトリのリモートリポジトリを管理するためのコマンドです。
+リモートリポジトリをエイリアス登録して管理(リモート名)します。(例. origin, upstream, etc)
+ローカルのリポジトリでリモート名を利用して、リモート情報の取得、リモート情報への発信を行う。
+
+### イディオム
+
+#### リモートリポジトリの確認
+
+```bash frame=none
+git remote   #リモートリポジトリの名前を表示
+git remote -v
+# "リモート名 ホスト部:リポジトリのパス (コマンド)" で表示される
+# 例. origin https://github.com/example/repo.git (fetch)
+# 例. origin https://github.com/example/repo.git (push)
+# または、
+# origin git@github.com:example/repo.git (fetch)
+# origin git@github.com:example/repo.git (push)
+
+git remote show origin  # show 名前(通常はorigin)で詳細
+```
+
+`git remote show リモートリポジトリ名`で表示される内容
+
+```txt
+Fetch URL: Fetchのリモートリポジトリの場所
+Push  URL: Pushのリモートリポジトリの場所
+HEAD branch: HEAD branch名(通常はmaster)
+Remote branches: 生成されたブランチ一覧
+Local branches configured for 'git pull':
+  `git pull` 用に設定されたローカルブランチ
+Local refs configured for 'git push':
+  `git push` 用に設定されたローカルなref
+```
+
+#### リモートリポジトリの情報を取得して、ローカルに反映させる
+
+```bash frame=none
+remote_name=origin
+
+# 最新のリモートのブランチの情報をローカルに反映させる
+git fetch $remote_name
+#リモートにある他の人が切ったブランチも含め、すべてのブランチを確認することができる
+git branch -a
+
+#リモートのブランチをローカルにきる
+git checkout -b local_branch_name origin/remote_branch_name
+```
+
+#### リモートの登録、情報取得、更新、削除
+
+```bash frame=none
+remote_name=origin
+remote_url=https://github.com/example/repo.git
+
+# リモートリポジトリの登録
+git remote add $remote_name $remote_url
+
+# リモートリポジトリの情報取得
+git remote show $remote_name
+
+# 登録しているリモートリポジトリの URL を確認
+git remote get-url $remote_name
+
+# 違うリモートリポジトリの URL に変更(更新)
+git remote set-url $remote_name $new_remote_url
+
+# ローカルリポジトリ側からのリモート登録連携を解除
+git remote rm $remote_name
+
+# リモートリポジトリの名前変更
+git remote rename $remote_name $new_remote_name
+```
+
+## Github のリモートリポジトリのホスト設定
+
+開発時に複数の git アカウントへのアクセスが必要な場合、それぞれのリポジトリへの ssh 接続設定が必要になります。
+接続時の秘密鍵の種類が違うため、.ssh/config に設定しているホストの設定によって、remote 先を変更しなければならない
+
+.git 内の設定で、プロジェクト毎にリモートの設定が異なる。git remote -v で確認をしつつ、remote の設定値を変更することで、プロジェクト毎でどこのリポジトリをリモートにしているかが変更できる
+
+```ini
+Host my-private-github
+    HostName github.com
+    IdentityFile ~/.ssh/my_github_id_rsa
+    User git
+
+Host github.com
+    HostName github.com
+    IdentityFile ~/.ssh/id_rsa
+    User git
+
+Host team-github
+    HostName github.com
+    IdentityFile ~/.ssh/team-id-rsa
+    User git
+```

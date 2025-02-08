@@ -31,7 +31,7 @@ func main() {
 }
 ```
 
-函数 main は何も返さない、引数も必要ありません。引数を取り、値を返す函数を見てみましょう。
+関数 main は何も返さない、引数も必要ありません。引数を取り、値を返す関数を見てみましょう。
 
 ```go
 package main
@@ -192,7 +192,7 @@ func main() {
 1. 16 行目の実行では、`cannot use a (variable of type []int) as int value in argument to addTo` というエラーが発生します。
    - これは、`addTo` 関数の引数が ([]int 型の変数を) int 型の値として使用することはできません。
 2. 17 行目の実行では、`cannot use []int{…} (value of type []int) as int value in argument to addTo` というエラーが発生します。
-   - これは、`addTo` 函数の引数で、`[]int{...}`（[]int 型の値）を int 型の値として使用できない。
+   - これは、`addTo` 関数の引数で、`[]int{...}`（[]int 型の値）を int 型の値として使用できない。
 
 </Steps>
 
@@ -421,29 +421,902 @@ fmt.Println("expressions:", expressions)
 
 expressions の文字列配列を回して、
 
-```go
+```go showLineNumbers {14-19}
 for _, expression := range expressions {
+
 	if len(expression) != 3 { // 演算子と被演算子の合計個数のチェック
 		fmt.Print(expression , " -- 不正な式です\n")
 		continue
 	}
+
 	p1, err := strconv.Atoi(expression[0]) // 1番目の被演算子のチェック
 	if err != nil {
 		fmt.Print(expression, " -- ", err, "\n")
 		continue
 	}
+
 	op := expression[1]   // 演算子のチェック
 	opFunc, ok := opMap[op]
 	if !ok {
 		fmt.Print(expression, " -- ", "定義されていない演算子です: ", op, "\n")
 		continue
 	}
+
 	p2, err := strconv.Atoi(expression[2])  // 2番目の被演算子のチェック
 	if err != nil {
 		fmt.Print(expression, " -- ", err, "\n")
 		continue
 	}
+
 	result := opFunc(p1, p2) // 実際の計算
 	fmt.Print(expression, " → ", result, "\n")
 }
 ```
+
+`strconv.Atoi` は文字列を整数に変換する関数(標準ライブラリ`strconv`の関数)です。
+
+```txt
+[2 + 3] → 5
+[2 - 3] → -1
+[2 * 3] → 6
+[2 / 3] → 0
+[2 % 3] -- 定義されていない演算子です: %
+[two + three] -- strconv.Atoi: parsing "two": invalid syntax
+[2 + three] -- strconv.Atoi: parsing "three": invalid syntax
+[5] -- 不正な式です
+```
+
+<Steps>
+
+1. `[2 + 3] [2 - 3] [2 * 3] [2 / 3]` までは、27 行目まで到達しています。
+
+1. `[2 % 3]` は、`%` が onMap に存在しないため、14 ~ 19 行目で処理されます。=> `[2 % 3] -- 定義されていない演算子です: %`
+
+1. `[two + three]` 、`[2 + three]` は被演算子のチェックで、エラーとなります。
+
+   => `[two + three] -- strconv.Atoi: parsing "two": invalid syntax` 、`[2 + three] -- strconv.Atoi: parsing "three": invalid syntax`
+
+1. `[5]` は、演算子と被演算子の合計個数のチェックで、エラーとなります。
+
+   => `[5] -- 不正な式です`
+
+</Steps>
+
+### 関数型の宣言
+
+関数型の値を宣言するのにも type を使います。
+
+```go
+type opFuncType func(int, int) int
+```
+
+先ほどの opMap の書き方を型宣言を使って書き直してみます。
+
+```go
+type opFuncType func(int, int) int
+
+var opMap = map[string]opFuncType{
+  "+": add,
+  "-": sub,
+  "*": mul,
+  "/": div,
+}
+```
+
+### 無名関数
+
+関数は値として扱えるため、変数に代入できる丈ではなく、関数内で別の関数を定義して、それを変数に代入することもできます。
+
+```go
+func main() {
+  f := func(i int, j int) int { return i + j }
+  fmt.Println(f(2, 3)) // 5
+}
+```
+
+キーワード `func` に続けて関数名を指定しないで引数と、戻り値の型、処理ブロックを記述します。
+これを変数に代入し(ここでは `f` に代入しています)、呼び出す際は `変数名(引数)` のようにします。(`f(2, 3)` としています)  
+このように、簡易的に関数を利用するパターン(スコープが狭い場合や、即時的に関数としての機能を利用したい)には無名関数が便利です。
+
+変数に代入しない無名関数の利用として [defer](/golang/base/14_function/#defer) 文 と、後述する[ゴルーチン](/golang/base/19_concurrent-processing/#ゴルーチンと-for-ループ)と組み合わせて利用するケースがあります。
+
+## クロージャ
+
+クロージャは、関数が関数の外側の変数を参照することができる機能です。関数がその定義時の周囲の変数（外側のスコープ）を参照できることを指します。
+
+利用用途として、
+
+- **状態の保持**: 例えば、呼び出すたびに状態が更新される累積処理の実現
+- **関数のカスタマイズ**: 関数の引数を変更せずに、関数の内部で状態を変更する
+- **データの隠蔽**: 外から直接アクセスできない変数
+- **イベントハンドラやコールバック関数の実装**: 外の状態をキャプチャし、後から呼び出す処理を定義できる
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+// adder は内部に sum を持ち、呼び出しごとに加算する関数を返す
+func adder() func(int) int {
+	sum := 0
+	return func(x int) int {
+		sum += x
+		return sum
+	}
+}
+
+func main() {
+	a := adder()
+	fmt.Println(a(1)) // 1
+	fmt.Println(a(2)) // 3
+	fmt.Println(a(3)) // 6
+}
+```
+
+この例では、`adder` 関数が返す無名関数が、`adder` のローカル変数 `sum` をクロージャとしてキャプチャしています。
+呼び出すたびに `sum` に加算され、状態が保持されます。
+
+:::note[他の言語との比較から理解する]
+
+**Python**
+
+Python でもネスト関数を使ってクロージャを作成できます。
+外側の変数を変更する場合は `nonlocal` の宣言が必要です。
+
+```python
+def adder():
+    sum = 0
+    def add(x):
+        nonlocal sum
+        sum += x
+        return sum
+    return add
+
+a = adder()
+print(a(1))  # 1
+print(a(2))  # 3
+```
+
+**PHP**
+
+PHP では、`use` キーワードを使ってクロージャを作成できます。
+`use` は外側の変数をキャプチャして、その変数の変更が参照渡しにするなら `&` をつけます。
+
+```php
+function adder() {
+    $sum = 0;
+    return function($x) use (&$sum) {
+        $sum += $x;
+        return $sum;
+    };
+}
+
+$a = adder();
+echo $a(1); // 1
+echo $a(2); // 3
+```
+
+**Java**
+
+Java では、Java 8 以降でラムダ式が導入されました。
+ラムダ式内では外側の変数をキャプチャできますが、キャプチャされる変数は「事実上 final」として扱われ、値の変更はできません。
+
+```java
+import java.util.function.IntUnaryOperator;
+
+public class ClosureExample {
+    public static IntUnaryOperator adder() {
+        final int[] sum = {0}; // 配列を利用して状態を持たせる
+        return (int x) -> {
+            sum[0] += x;
+            return sum[0];
+        };
+    }
+
+    public static void main(String[] args) {
+        IntUnaryOperator a = adder();
+        System.out.println(a.applyAsInt(1)); // 1
+        System.out.println(a.applyAsInt(2)); // 3
+    }
+}
+```
+
+:::
+
+クロージャ機能の一つは関数のスコープ制限です。
+「外側の関数 f からしか呼び出されないが、関数 f から何度も呼び出される」とき、
+呼び出される関数 g を隠すのに "関数内の関数" という特性が使えます。
+隠しておくことで、パッケージレベルの関数の宣言が不要になるので、名前の衝突なども避けられます。
+
+また、クロージャの利用例を上記で挙げているように、
+外側の関数 f 内で隠蔽された関数 g で実行した外側の変数の変更が、関数 f のスコープ内でも変更が反映されるということ(参照渡し)は大きな特徴です。
+
+### 関数引数
+
+"関数は値(であり型もある)" ということは、関数に引数として関数を渡すこともできるのです。
+ローカル変数を参照するクロージャを作成してそのクロージャを別の関数に渡すことで、局所変数を外に持ち出せるようになります。
+これは非常に有用なパターンで、標準ライブラリでも使われています。
+
+標準ライブラリ `sort` パッケージの中で、`sort.Slice` 関数は、引数にスライスと関数を取ります。
+
+<LinkPreview url="https://pkg.go.dev/sort#Slice" />
+
+渡された関数は、スライスの sort に使われます。
+
+```go showLineNumbers {20-21, 27-28, 34-35, 37-38}
+package main
+
+import (
+	"fmt"
+	"sort"
+)
+
+func main() {
+	type Person struct { //liststart1
+		FirstName string
+		LastName  string
+		Age       int
+	}
+
+	people := []Person{
+		{"Pat", "Patterson", 37},
+		{"Tracy", "Bobbert", 23},
+		{"Fred", "Fredson", 18},
+	}
+	fmt.Println("●初期データ")
+	fmt.Println(people)
+
+	// 姓（LastName）でソート
+	sort.Slice(people, func(i int, j int) bool {
+		return people[i].LastName < people[j].LastName
+	})
+	fmt.Println("●姓（LastName。2番目のフィールド）でソート")
+	fmt.Println(people)
+
+	// 年齢（Age）でソート
+	sort.Slice(people, func(i int, j int) bool {
+		return people[i].Age < people[j].Age
+	})
+	fmt.Println("●年齢（Age）でソート")
+	fmt.Println(people)
+
+	fmt.Println("●ソート後のpeople")
+	fmt.Println(people)
+}
+```
+
+同じデータをクロージャを使って `sort` して出力した結果が以下となります。
+
+<Steps>
+
+1. 初期データの内容(20 ~ 21 行目)
+
+   ```txt
+    ●初期データ
+   [{Pat Patterson 37} {Tracy Bobbert 23} {Fred Fredson 18}]
+   ```
+
+2. 姓（LastName）でソート(27 ~ 28 行目)
+
+   ```txt
+    ●姓（LastName。2番目のフィールド）でソート
+   [{Tracy Bobbert 23} {Fred Fredson 18} {Pat Patterson 37}]
+   ```
+
+3. 年齢（Age）でソート(34 ~ 35 行目)
+
+   ```txt
+    ●年齢（Age）でソート
+   [{Fred Fredson 18} {Tracy Bobbert 23} {Pat Patterson 37}]
+   ```
+
+4. ソート後の people(37 ~ 38 行目)
+
+   ```txt
+    ●ソート後のpeople
+   [{Fred Fredson 18} {Tracy Bobbert 23} {Pat Patterson 37}]
+   ```
+
+   最終的に people の内容が変更されています。
+
+</Steps>
+
+宣言された スライス型 `people` は、関数 `sort.Slice` によって変更されています。これは Go が参照渡しをサポートしているためです。
+
+### 関数から関数を返す
+
+クロージャと使って、関数の状態を別の関数に渡せるだけでなく、関数からクロージャを返すことができます。
+
+掛け算をする関数を返す関数を作成してみます。
+
+```go
+func makeMult(base int) func(int) int {
+	return func(factor int) int {
+		return base * factor
+	}
+}
+```
+
+この関数は、`base` という整数を受け取り、`base` に掛ける関数(クロージャ)を返します。
+
+```go
+mult := makeMult(2)
+// この時点で、mult は func(int) int 型の関数となる
+fmt.Println(mult(3)) // 6
+```
+
+<Steps>
+
+1. `mult := makeMult(2)` で、`mult` は `makeMult` 関数の返り値であるクロージャを参照します。
+
+1. `mult` は以下のようなクロージャとなっています。
+
+   ```go
+   func(factor int) int {
+   	return 2 * factor
+   }
+   ```
+
+1. `fmt.Println(mult(3))` は、`return 2 * factor` の計算結果である `6` を出力します。
+
+</Steps>
+
+このように、`makeMult` 関数は `mult` という変数にクロージャを返します。
+`mult` は `makeMult` の外側の変数 `base` を参照しています。
+
+以下のような実行内容も試してみましょう。
+
+```go
+func main() {
+	twoBase := makeMult(2)   // 2倍する関数
+	threeBase := makeMult(3) // 3倍する関数
+	for i := 0; i <= 5; i++ {
+		fmt.Print(i, ": ", twoBase(i), ", ", threeBase(i), "\n")
+	}
+}
+```
+
+```txt
+0: 0, 0
+1: 2, 3
+2: 4, 6
+3: 6, 9
+4: 8, 12
+5: 10, 15
+```
+
+Go 言語も高階関数(higher-order function)をサポートしています。
+これは、関数が引数に関数を受け取ったり、戻り値として関数を返せることです。
+
+## defer
+
+プログラムでは、ファイルやネットワーク接続といった一時的なリソースを作成することがよくあります。
+そういったリソースは後始末(クリーンアップ)が必要なります。この後始末は必ず行わなければなりません。
+関数にいくつ出口があろうが、関数が正常終了しようが以上終了しようが関係ありません。
+Go 言語では、後始末のコードはキーワード `defer` を使って関数に付与します。
+
+### cat コマンドの簡易版
+
+defer を使ってリソースを解放する例を見てみましょう。
+これは、ファイルの内容を表示する Unix ユーティリティ cat の簡易版を作成します。
+
+```go "os.Open(os.Args[1])" showLineNumbers {10-12,21,22} del="defer f.Close()"
+package main
+
+import (
+	"io"
+	"log"
+	"os"
+)
+
+func main() {
+	if len(os.Args) < 2 { // ファイル名が指定されている？
+		log.Fatal("ファイルが指定されていません")
+	}
+	f, err := os.Open(os.Args[1]) // ファイルをオープン
+	if err != nil {
+		log.Fatal(err) // オープンに問題あり。エラーを出力して終了
+	}
+	defer f.Close() // 後始末のコード
+
+	data := make([]byte, 2048) // バイトのスライスを生成
+	for { // 無限ループ
+		count, err := f.Read(data) // 読み込んだバイト数とエラーを返す
+		os.Stdout.Write(data[:count]) // 「標準出力」に出力
+		if err != nil {
+			if err != io.EOF { // ファイルの終わりでないならば
+				log.Fatal(err)  // エラーを出力して終了
+			}
+			break  // forループを抜ける
+		}
+	}
+}
+```
+
+こちらの内容をターミナルで実行した結果です。
+
+```bash frame=none
+go run cat.go sample.txt
+kkkkkkkk
+kkkkkkkk
+llllllll
+mmmmmmmm
+```
+
+<Steps>
+
+1. 10 ~ 12 行目で引数にファイル名を指定しているか確認します。なければ、log.Fatal でエラーを出力して終了します。
+
+1. ファイルの内容を `os.Open(os.Args[1])` で読み込みます。
+
+1. 17 行目で、`defer f.Close()` でファイルを閉じます。
+   `os.Open` による有効なファイルハンドリングが実行できたのなら、使った後にそれを終了(close)します。
+   これは関数の終わり方によらず、defer(遅延) を使う t ことで、後始末のコードを確実に実行するようにします。
+   `defer f.Close()` で、この関数の実行が終了するまで、次の処理の実行を遅延させます。
+
+1. 21 行目で、ファイル変数 `f` に [Read メソッド](/golang/base/20_standard-library/#入出力)を実行し、byte 型のスライス `data` にファイルの内容を読み込みます。
+   `Read` メソッドは、ファイルから読み込んだバイト数とエラーを返します。
+   エラーがあれば、ファイルの終端 (end of file) かどうかチェックします。ファイルの終端であれば、`break` をつかって for ループを抜けます。
+   その他のエラーであれば、log.Fatal でエラーを出力して終了します。
+
+1. 22 行目で、`os.Stdout.Write(data[:count])` でファイルの内容を標準出力に出力します。
+
+</Steps>
+
+defer は関数内で複数のクロージャを defer できます。クロージャは LIFO(Last In First Out: 後入れ先だし) の順番で実行されます。
+最後に defer されたクロージャが最初に実行されます。
+
+```go
+func main() {
+	defer fmt.Println("1")
+	defer fmt.Println("2")
+}
+```
+
+```txt
+2
+1
+```
+
+### defer の基本動作
+
+#### 実行タイミング
+
+`defer` で指定された関数（あるいはクロージャ）は、return 文の直後（つまり関数の終了直前）に実行されます。
+たとえば、関数内で複数の defer を指定した場合、最後に登録した defer から LIFO（後入れ先出し）の順番で実行されます。
+
+#### 引数の評価タイミングの違い
+
+`defer` では以下の２通りの指定方法があります。
+
+1. **関数を指定する方法**
+
+   ```go
+   i := 5
+   defer fmt.Println("defer（引数評価済み）:", i)
+
+   ```
+
+   この場合、`fmt.Println` に渡す引数 `i` は `defer` 文が実行された時点で評価されるため、
+   たとえばその後に `i` の値が変更されても、`defer` に渡す値は固定されます。
+
+2. **クロージャを指定する方法**
+
+   ```go
+   i := 5
+   defer func() {
+   	fmt.Println("defer（クロージャ）:", i)
+   }()
+   ```
+
+   この場合、クロージャ内で参照している `i` は、`defer` が実行される（つまり関数の終了直前）の時点で評価されます。
+   そのため、もしその後 `i` の値が変更されていれば、クロージャ内では新しい値が参照されます。
+
+```go showLineNumbers {9,13}
+package main
+
+import "fmt"
+
+func main() {
+	i := 5
+
+	// 直接関数呼び出しの場合、引数は defer 時点で評価される
+	defer fmt.Println("defer（引数評価済み）:", i)
+
+	// クロージャの場合、実際に実行されるまで変数 i の評価は行われる
+	defer func() {
+		fmt.Println("defer クロージャ（実行時評価）:", i)
+	}()
+
+	i = 10 // ここで i の値が変更される
+
+	fmt.Println("main 関数終了直前")
+}
+```
+
+実行結果
+
+```txt
+main 関数終了直前
+defer クロージャ（実行時評価）: 10
+defer（引数評価済み）: 5
+```
+
+<Steps>
+
+1. 9 行目では、defer 文が実行された時点で i の値 5 が渡されているため、関数終了後もそのまま 5 が表示されます。
+1. 13 行目の defer（クロージャ）の場合、クロージャ内で i が参照されるのは関数の終了直前なので、すでに i は 10 に更新されており、その値が表示されます。
+
+</Steps>
+
+:::caution
+
+defer 文に戻り値を持つ関数を書くことはできますが、戻り値を知る方法はありません。
+
+```go
+func main() {
+	defer func() int {
+		return 1 // この戻り値は無視される
+  }()
+}
+```
+
+:::
+
+**defer の実行は return の後**です。
+
+defer で指定したコードは、return 文が実行された後、関数の終了前に実行されるため、後始末処理（ファイルクローズ、ロック解除など）に適しています。
+
+### 名前付き戻り値を利用した defer の実行
+
+関数の戻り値を名前付きで宣言した場合(名前付き戻り値)、`defer` により遅延実行を指定された関数が外側の関数の戻り値を検証したり変更したりすることができます。
+
+名前付き戻り値は変数ですが、関数内のどこでもその変数を参照できます。
+return 文が実行された後、defer の関数で名前付き戻り値の変数に対して操作が行われ、関数の最終的な戻り値が決定できます。
+
+```go showLineNumbers {6-12}
+package main
+
+import "fmt"
+
+func sampleFunc() (result int) {
+	defer func() {
+		// 例として、result が 100 未満の場合、戻り値を 100 に変更する
+		if result < 100 {
+			result = 100
+		}
+		fmt.Println("deferred: result is now", result)
+	}()
+
+	// ここで何らかの処理をして、result を設定する
+	result = 50
+	// return 文実行後、defer 内の処理が実行され、result の値が変更される
+	return
+}
+
+func main() {
+	fmt.Println("Result:", sampleFunc())
+}
+```
+
+実行結果
+
+```txt
+deferred: result is now 100
+Result: 100
+```
+
+<Steps>
+
+1. sampleFunc は名前付き戻り値 'result' を持つ関数として定義されています。
+
+1. 6 ~ 12 行目の defer 内で、result の値を検証し、条件に応じて変更できる
+   defer 内の処理は、実際の return の直後に実行されるので、ここでの result の変更が最終的な戻り値に反映されます。
+
+1. 先に、`deferred: result is now 100` が出力され(defer 内の処理が評価され)、最後に `Result: 100` が出力されます。
+
+</Steps>
+
+return 文の直前では、名前付き戻り値 result の値は 50 としていましたが、
+defer 内の処理で result の値を 100 に変更しているため、最終的な戻り値は 100 となります。
+
+このような名前付き戻り値を利用した defer の実行は、以下の操作を行う場合に便利です。
+
+- **defer 内での最終的な戻り値の操作**: 名前付き戻り値を利用することで、defer 内からその値にアクセスできるようになります。
+- **戻り値の検証や変更などの後処理に利用**: defer は return 文実行後直前に実行されるため、戻り値の検証や変更などの後処理に利用できます。
+- **エラーハンドリング**: エラーが発生した場合、戻り値を変更してエラーを処理することができます。
+
+#### defer の利用例(DB 接続とトランザクション処理)
+
+```go
+func DoSomeInserts(ctx context.Context, db *sql.DB, value1, value2 string) err error {
+  tx, err := db.BeginTx(ctx, nil)
+  if err != nil {
+    return err
+  }
+  defer func() {
+    if err == nil {
+      err = tx.Commit() // エラーなければコミット
+    }
+    if err != nil {
+      err = tx.Rollback() // コミットした結果エラーがあればロールバック
+    }
+  }()
+
+  _, err = tx.ExecContext(ctx, "INSERT INTO table1 (column1) VALUES (?)", value1)
+  if err != nil {
+    return err
+  }
+
+  _, err = tx.ExecContext(ctx, "INSERT INTO table2 (column2) VALUES (?)", value2)
+  if err != nil {
+    return err
+  }
+
+  return nil
+}
+```
+
+データベースに一連の書き込みを行うためのトランザクションを作成しています。
+書き込みが一つでも失敗すれば、ロールバックします。すべて成功した場合、コミットします。
+defer でクロージャを指定して、err に値が代入されているかどうかチェックし、代入されていなければ `tx.Commit()` を実行します。
+しかし、ここでも err が変更されるため、DB とのやりとりでエラーが返されれば、 `tx.Rollback()` が実行されます。
+
+この関数は、2 つの INSERT 操作をトランザクション内で実行します。
+トランザクションは、`BeginTx` メソッドで開始され、`Commit` メソッドでコミットされます。
+エラーが発生した場合、`Rollback` メソッドでロールバックされます。
+
+:::note[database/sql]
+
+標準ライブラリのパッケージである `database/sql` パッケージは、データベースとの接続やトランザクション処理を行うための機能を提供します。
+
+<LinkPreview url="https://pkg.go.dev/database/sql" />
+
+:::
+
+### cat コマンドの簡易版を改良(クロージャを返す関数の作成)
+
+[無名関数を戻り値として返すプログラム](/golang/base/14_function/#関数から関数を返す)はすでに作成しています。
+
+cat コマンドの簡易版を作成したことで、リソースを戻り値として割り当てることができるようになりました。さらに、そのリソースを解放するためのクロージャを返す関数をとして作成します。これは Go のプログラムにおいて一般的なパターンです。
+
+```go
+func getFile(name string) (*os.File, func(), error) {
+	file, err := os.Open(name)
+	if err != nil {
+		return nil, nil, err
+	}
+	return file, func() {
+		file.Close()
+	}, err
+}
+```
+
+この getFile 関数は、ファイルを開いて、そのファイルを閉じるためのクロージャ、エラーを返します。
+`*os.File` の `*` はポインタ型を表します。
+
+```go
+file, closer, err := getFile("sample.txt")
+if err != nil {
+	log.Fatal(err)
+}
+defer closer() // ファイルを閉じる。closer の後ろに () をつけることを忘れずに!
+```
+
+Go では、ブランクを指定しない限り、関数の戻り値を変数に代入したことにより、closer を使わなければ syntax エラーになります。
+これで、defer の指定を忘れることを防ぐことになります。
+
+:::note[他の言語との違いからみる defer]
+
+リソースの後始末制御をするのに、Java、JavaScript、Python などでは try/catch/finally や with 文を使います。
+Ruby では、begin/rescue/ensure 文を使います。
+そのような関数内でのブロック処理に慣れていると、defer の使い方に違和感を覚えるかもしれません。
+
+これは、他の言語がブロック処理で入れ子状のコードが読みづらいという意見から、Go の defer はシンプルでわかりやすいという意見から来ています。
+
+コードの複雑性に影響があるのは、「入れ子の深さ」と「構造の欠如」の 2 項目になります。
+
+- 入れ子の深さ: コードの入れ子が深いと、コードを読みづらく、デバッグが難しくなります。
+- 構造の欠如: コードの構造が欠如していると、コードを読みづらく、デバッグが難しくなります。
+
+Go の defer は、コードの複雑性に影響を与えることなく、コードをシンプルに保ちます。
+
+:::
+
+## Go は値渡し
+
+Go 言語は「値渡し (call by value)」です。値渡しとは、関数に渡された引数の値をコピーして渡すことです。
+
+### 基本型の場合
+
+```go
+type person struct {
+	age  int
+	name string
+}
+
+func modifyFails(i int, s string, p person) {
+	i *= 2
+	s = "さようなら"
+	p.name = "Bob"
+}
+
+func main() { //liststart3
+	i := 2
+	s := "こんにちは"
+	p := person{}
+	fmt.Println(i, s, p)  // 2 こんにちは {0 }
+	modifyFails(i, s, p)
+	fmt.Println(i, s, p)  // 2 こんにちは {0 }
+}
+```
+
+これは、main 関数を見ていただくとわかるように、最初に定義した変数を `modifyFails` 関数に渡すことで、
+その値が変更されるかどうかを検証しています。
+
+実行結果は最後の `fmt.Println` の出力内容も最初と同じものになります。
+person という構造体にも同様に変更はありません。(基本型以外の値も同様であることを検証しています。)
+
+これは、Go 言語が値渡しを行っているためです。
+この挙動は[ポインタ](/golang/base/15_pointer/)の中で説明します。
+
+基本型や構造体の場合、渡される値そのものがコピーされるため、関数内でそのコピーを変更しても呼び出し元の値は変化しません。
+
+### マップとスライスの場合
+
+マップとスライスの場合は挙動が違います。
+
+```go showLineNumbers {20, 25, 9, 11}
+func modMap(m map[int]string) {
+	m[2] = "こんにちは"
+	m[3] = "さようなら"
+	delete(m, 1)
+}
+
+func modSlice(s []int) {
+	for k, v := range s {
+		s[k] = v * 2 // 基底配列の要素を直接書き換え、呼び出し元の値も変更反映される
+	}
+	s = append(s, 10) // ローカルスコープにのみ有効な変更
+	fmt.Println(s) // [2 4 6 10]
+}
+
+func main() {
+	m := map[int]string{
+		1: "1番目",
+		2: "2番目",
+	}
+	fmt.Println(m)  // map[1:1番目 2:2番目]
+	modMap(m)
+	fmt.Println(m)  // map[2:こんにちは 3:さようなら]
+
+	s := []int{1, 2, 3}
+	modSlice(s)
+	fmt.Println(s)  // [2 4 6]
+}
+```
+
+```txt
+map[1:1番目 2:2番目]
+map[2:こんにちは 3:さようなら]
+[2 4 6 10]
+[2 4 6]
+```
+
+#### マップの場合
+
+マップの場合、簡単でマップ引数に対して行われた変更は、呼び出し元のマップにも反映されます。
+
+<Steps>
+1. 19 行目: 変数 `m` の初期値は `map[1:1番目 2:2番目]` です。
+
+1. 関数 `modMap` に渡される `m` は、**マップのヘッダのコピー**ですが、ヘッダが指す基底のデータは同じものです。
+
+1. そのため、`m[2]` の値を "こんにちは"に変更したり、`m[3]` を追加、さらに `delete(m, 1)` を実行すると、元のマップの内容が直接書き換えられます。
+
+1. 結果として、その後の出力は `map[2:こんにちは 3:さようなら]` と変更されます。
+
+</Steps>
+
+#### スライスの場合
+
+<Steps>
+
+1. 24 行目: スライス `s` もヘッダのコピーが渡されます。このヘッダには基底配列へのポインタがあります。
+
+1. 関数 `modSlice` のループ内で `s[k] = v * 2` としている部分(9 行目)は、**基底配列の要素を直接書き換えている**ため、呼び出し元にも反映されます。
+   **インプレース更新**(`s[k] = …`): 渡されたスライスが内部で参照している規定配列の各要素を書き換えます。
+
+   - スライスヘッダー（ポインタ、長さ、容量）は値渡しされるため、ヘッダーを通じて同じ基底配列を参照している場合、内部の要素変更が呼び出し元にも反映されます。
+
+1. しかし、`s = append(s, 10)` としている部分(11 行目)は、基底配列の長さを変更しているため、呼び出し元には反映されません。
+   `append` による変更はスライスヘッダーをローカル変数に再代入しているだけで、元のスライスヘッダー（＝呼び出し元で持っているもの）には影響しません。(変更はローカルスコープにのみ有効)
+   main でのスライスは `[2, 4, 6]` のままとなります。
+
+</Steps>
+
+マップやスライスは内部的には小さなヘッダ情報（ポインタ、長さ、容量など）として実装されており、そのヘッダが実際のデータを参照しています。
+コピーされたヘッダは同じ基底のデータを指しているため、関数内で要素の変更や削除を行うと呼び出し元にも反映されます。
+
+:::note[ポインタとスライス]
+
+ポインタとスライスの違いは、ポインタはメモリアドレスを指すのに対し、スライスはメモリアドレスと長さ、容量を含むヘッダーです。
+スライスの内部状態を検証してみます。
+
+```go showLineNumbers {29, 12, 16, 18, 21-23, 31}
+package main
+
+import (
+	"fmt"
+	"reflect"
+	"unsafe"
+)
+
+func modSlice(s []int) {
+	// ローカルでのスライスヘッダーの状態を確認
+	sh := *(*reflect.SliceHeader)(unsafe.Pointer(&s))
+	fmt.Printf("[modSlice] before append, s=%v, len=%d, cap=%d, ptr=%#x\n", s, len(s), cap(s), sh.Data)
+
+	// 各要素を更新（基底配列の内容を更新）
+	for k, v := range s {
+		s[k] = v * 2
+	}
+	fmt.Printf("[modSlice] after update, s=%v, len=%d, cap=%d\n", s, len(s), cap(s))
+
+	// 追加してローカルのスライスヘッダーを更新する
+	s = append(s, 10)
+	sh2 := *(*reflect.SliceHeader)(unsafe.Pointer(&s))
+	fmt.Printf("[modSlice] after append, s=%v, len=%d, cap=%d, ptr=%#x\n", s, len(s), cap(s), sh2.Data)
+}
+
+func main() {
+	s := []int{1, 2, 3}
+	sh := *(*reflect.SliceHeader)(unsafe.Pointer(&s))
+	fmt.Printf("[main] before modSlice, s=%v, len=%d, cap=%d, ptr=%#x\n", s, len(s), cap(s), sh.Data)
+	modSlice(s)
+	fmt.Printf("[main] after modSlice, s=%v, len=%d, cap=%d\n", s, len(s), cap(s))
+}
+```
+
+実行結果
+
+```txt
+[main] before modSlice, s=[1 2 3], len=3, cap=3, ptr=0xc0000b0000
+[modSlice] before append, s=[1 2 3], len=3, cap=3, ptr=0xc0000b0000
+[modSlice] after update, s=[2 4 6], len=3, cap=3
+[modSlice] after append, s=[2 4 6 10], len=4, cap=6, ptr=0xc0000bc000
+[main] after modSlice, s=[2 4 6], len=3, cap=3
+```
+
+s の内部状態（ポインタ、長さ、容量）を reflect.SliceHeader や unsafe を用いて確認してみましょう
+
+<Steps>
+
+1. まず、modSlice 関数実行開始前の 引数 `s` の内部状態を確認します(29 行目)。  
+   `sh.Data` は `s` の基底配列のメモリアドレスを指しています。  
+   `s=[1 2 3], len=3, cap=3, ptr=0xc0000b0000`
+
+   - `%v` : 変数の値をそのまま表示
+   - `%d` : スライスの長さ（要素数）を整数として表示
+   - `%#x` : 16 進数で表示し、16 進数の先頭に `0x` を付与
+
+1. modSlice 内の実行に移ります
+
+   1. append 実行前の値も確認します(12 行目)。  
+      `s=[1 2 3], len=3, cap=3, ptr=0xc0000b0000`
+
+   1. 16 行目: `s[k] = v * 2` により `[1,2,3]` が `[2,4,6]` に更新され、呼び出し元のスライスも更新されることが確認できます(18 行目)。  
+      `s=[2 4 6], len=3, cap=3, ptr=0xc0000b0000`
+
+   1. 21 行目で append を実行します。その結果の処理も含めて変更されている値を確認します。  
+      `s=[2 4 6 10], len=4, cap=6, ptr=0xc0000bc000`
+      これで、ポインタの変更が確認できました。引数として渡された変数が参照するアドレス(`0xc0000b0000`)とは違うことがわかります。
+
+1. 31 行目: 関数 `modSlice` 実行後の s の値を確認してみましょう。  
+   `s=[2 4 6], len=3, cap=3`
+
+</Steps>
+
+:::

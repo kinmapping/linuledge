@@ -18,3 +18,42 @@ import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
 import LinkPreview from "@components/LinkPreview.astro";
 import MermaidChart from "@components/MermaidChart.astro";
 import Table from "@components/Table.astro";
+
+## 型
+
+## メソッド
+
+## インターフェース
+
+インターフェース型はあらゆる型と互換性のある型です。
+
+ゼロ値: `nil`
+
+```go
+var x interface{}
+
+fmt.Println(x) // <nil>
+
+// x にはあらゆる型の値を代入できる
+x = 10
+fmt.Println(x) // 10
+x = "Hello"
+fmt.Println(x) // Hello
+x = true
+fmt.Println(x) // true
+
+```
+
+インターフェース型は互換性のある型といいつつ、データ固有の演算などはできません。
+
+```go
+var x interface{}
+
+x.String() // x.String undefined (type interface{} has no field or method String)
+
+x = 2
+fmt.Println(x + 3) // invalid operation: x + 3 (mismatched types interface{} and int)
+```
+
+`mismatched types interface{} and xxx` はインターフェース型と xxx の型が一致しないというエラーです。
+これは、インターフェース型は互換性がありますが、型は `interface{}` という型であるためです。

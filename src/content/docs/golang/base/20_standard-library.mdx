@@ -22,3 +22,22 @@ import Table from "@components/Table.astro";
 ## 標準ライブラリ
 
 標準ライブラリは、Go 言語の標準的な機能を提供するライブラリです。
+
+## 入出力
+
+### fmt
+
+<LinkPreview url="https://pkg.go.dev/fmt@latest" />
+fmt パッケージは、入出力とフォーマットを行うためのパッケージです。 C の printf とs canf に類似した関数でフォーマットされた
+I/O を実装する。 フォーマットの「動詞」はCのものから派生したものですが、よりシンプルになっています。
+
+#### Printf
+
+Printf は、指定されたフォーマット文字列に従って引数を整形して出力します。
+
+```go
+func Printf(format string, a ...any) (n int, err error)
+```
+
+Println は、オペランドにデフォルトの書式を使用して書式設定し、標準出力に書き出す。
+オペランド間には常にスペースが追加され、改行が追加される。 書き込まれたバイト数と、発生した書き込みエラーが返される。

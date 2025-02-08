@@ -1,0 +1,160 @@
+---
+title: Git Subtree と Submodule の選択
+description: Git Subtree と Submodule の選択についてまとめます
+tags:
+  - "Git"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+
+  label: Git Subtree と Submodule の選択
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 50
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+docs 配下のマークダウンファイルを現在のメインリポジトリの管理から分離して、別のリポジトリとして運用する方法としては、主に以下の２つが考えられます。
+
+## Git Submodule を利用する方法
+
+### git submodule について
+
+git の サブモジュールは外部の git リポジトリを自分の git リポジトリのサブディレクトリとして取り込み、そのソースは特定のコミットを参照します。
+
+#### サブモジュールを追加する手順
+
+現在のリポジトリのルート階層移動し、指定フォルダにサブモジュールを追加します。
+
+```bash frame=none
+REPO_URL=https://github.com/example/docs-repo.git
+TARGET_DIR=src/components/docs
+
+cd project-root
+git submodule add $REPO_URL $TARGET_DIR
+```
+
+こちらを実行すると、取り込んだプロジェクトリポジトリ側でサブモジュール管理用のファイルが生成される。
+
+```ini title=".gitmodules"
+[submodule "src/components/docs"]
+  path = src/components/docs
+  url = https://github.com/example/docs-repo.git
+```
+
+特定のコミットを参照する場合は、以下のようにコミットハッシュを指定します。
+
+```bash frame=none
+git submodule add $REPO_URL $TARGET_DIR <commit-hash>
+```
+
+サブモジュールのソースはブランチではなく、コミットを参照しています。
+
+#### リモートリポジトリからサブモジュールを含むプロジェクトの clone を取得する
+
+```bash frame=none
+git clone --recursive $REPO_URL
+```
+
+#### サブモジュールを更新する
+
+サブモジュール管理のディレクトリに移動し、通常のリポジトリと同じように branch の移動や fetch を行います。
+
+```bash frame=none
+cd $TARGET_DIR
+git fetch
+git checkout main
+git pull
+```
+
+決まったブランチの更新を行うだけであれば、以下のコマンドでサブモジュールを更新することも可能です。
+
+```bash frame=none
+git submodule update --remote
+```
+
+### 概要
+
+Git Submodule を使うと、`src/components/docs` ディレクトリを独立した別リポジトリとして管理し、メインリポジトリにはその参照情報だけを保持できます。これにより、ブログ投稿用のコンテンツだけを独自のリポジトリで管理しながら、Astro.js のビルド時にはメインリポジトリ内の `src/components/docs` として取り込むことが可能です。
+
+### 利点
+
+- **独立性:** docs 用のリポジトリとメインプロジェクトを別々にバージョン管理できる。
+- **更新管理:** サブモジュールのコミットハッシュを更新することで、どのバージョンの docs を利用するか明示的に管理できる。
+
+### 手順例
+
+1. **docs リポジトリの作成:**  
+   まず、ブログ投稿用のファイルを含む新しい Git リポジトリを作成します。GitHub や GitLab に独立したリポジトリを用意してください。
+
+2. **メインリポジトリにサブモジュールとして追加:**  
+   メインリポジトリのルートディレクトリで以下のコマンドを実行して、`src/components/docs` としてサブモジュールを追加します。
+
+   ```bash
+   git submodule add <docs_repo_url> src/components/docs
+   ```
+
+3. **サブモジュールの更新:**  
+   docs リポジトリ側で更新があった場合、メインリポジトリ内でサブモジュールを更新するには以下のコマンドを利用します。
+
+   ```bash
+   git submodule update --remote
+   ```
+
+4. **コミットとプッシュ:**  
+   サブモジュール自体の参照が更新された場合は、メインリポジトリでもその変更をコミット・プッシュしてください。
+
+---
+
+## 2. Git Subtree を利用する方法
+
+### 概要
+
+Git Subtree を使うと、別リポジトリの内容をメインリポジトリの指定ディレクトリ（この場合は `src/components/docs`）に統合しながらも、別リポジトリとして独立した管理を行うことができます。
+
+### 利点
+
+- **単一リポジトリでの管理:** サブモジュールとは異なり、サブツリーはメインリポジトリに統合されるため、クローンやチェックアウトがシンプルになります。
+- **履歴の分離:** docs の変更履歴は別リポジトリからの取り込みという形で管理できるので、独立性も保てます。
+
+### 手順例
+
+1. **docs リポジトリの作成:**  
+   まず、独立した docs 用のリポジトリを作成します。
+
+2. **サブツリーの追加:**  
+   メインリポジトリのルートディレクトリで以下のようにサブツリーとして追加します。
+
+   ```bash
+   git subtree add --prefix=src/components/docs <docs_repo_url> main --squash
+   ```
+
+   ※ `--prefix` で配置先ディレクトリ、`main` は docs リポジトリ側のブランチ名です。`--squash` オプションはコミット履歴を１コミットにまとめます（必要に応じて外すこともできます）。
+
+3. **更新の取り込み:**  
+   docs リポジトリに変更があった場合、メインリポジトリに取り込むには以下のように実行します。
+
+   ```bash
+   git subtree pull --prefix=src/components/docs <docs_repo_url> main --squash
+   ```
+
+4. **変更の反映（逆方向）:**  
+   もし、メインリポジトリ側で docs に変更を加え、docs リポジトリに反映したい場合も subtree を使ってプッシュできます（ただし、運用ルールを明確にしておくと良いでしょう）。
+
+---
+
+## 運用上の注意点
+
+- **ビルドやデプロイの影響:**  
+  Astro.js のブログサイトの場合、ビルド時に `src/components/docs` 内の Markdown ファイルが読み込まれるため、サブモジュールやサブツリーとして追加しても、パスやファイル構成に影響が出ないように注意してください。
+
+- **チームでの運用ルール:**  
+  サブモジュールの場合、他の開発者がリポジトリをクローンしたときに `git submodule update --init --recursive` を実行する必要があります。サブツリーの場合はその点はシンプルですが、どちらの運用方法にするかチーム内で合意しておくとスムーズです。
+
+- **CI/CD の設定:**  
+  サブモジュールやサブツリーを利用する場合、CI/CD パイプラインでもそれらの取得方法を正しく設定する必要があります。
+
+---
+
+以上のように、docs ディレクトリをメインの Git 管理から分離するためには、Git Submodule や Git Subtree を利用する方法が一般的です。プロジェクトの規模やチームの運用方法、またビルドプロセスとの連携などを考慮して、最適な方法を選んでください。
