@@ -42,7 +42,7 @@ export default defineConfig({
                 // replacesTitle: true,
             },
             customCss: [
-                './src/styles/over-w-props.css',
+                './src/styles/_sl-props.css',
                 './src/tailwind.css',
                 // @font-face CSSファイルへの相対パス
                 // './src/fonts/font-face.css',

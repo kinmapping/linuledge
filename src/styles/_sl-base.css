@@ -1,0 +1,113 @@
+/*
+HTML の基本要素（例：見出し、段落、リスト、コードブロック、pre 要素など）の初期スタイルやリセット、タイポグラフィの上書きに使います。
+グローバルな HTML 要素の基本スタイルをまとめる
+*/
+@layer base {
+    .sl-markdown-content h1:not(:where(.not-content *)) {
+        @apply text-4xl font-semibold text-accent-600 mb-4;
+    }
+    .sl-markdown-content h2:not(:where(.not-content *)) {
+        @apply text-3xl
+            font-semibold
+            text-transparent
+            bg-clip-text bg-gradient-to-r
+            pl-4
+            py-4
+            mb-4
+            from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90%
+            /* 左 */
+            border-s-4
+            border-l-accent-600
+            /* 上 */
+            border-t-4
+            border-t-accent-600
+            /* 右 */
+            border-r
+            border-r-emerald-900/15
+            /* 下 */
+            border-b
+            border-b-stone-500/15
+            rounded
+            shadow-sbump;
+        /* @apply text-3xl font-semibold text-accent-600 mb-3; */
+    }
+    .sl-markdown-content h3:not(:where(.not-content *)) {
+        @apply text-2xl
+            font-semibold
+            text-accent-500
+            pl-2
+            py-2
+            mb-2
+            /* 左 */
+            border-s-4
+            border-l-accent-600
+            /* 上 */
+            border-t
+            border-t-white/10
+            /* 右 */
+            border-r
+            border-r-emerald-900/15
+            /* 下 */
+            border-b
+            border-b-stone-500/15
+            rounded
+            shadow-sbump;
+        text-shadow: var(--text-shadow);
+    }
+    .sl-markdown-content h4:not(:where(.not-content *)) {
+        @apply text-xl
+            font-semibold
+            text-accent-600
+            mb-2
+            p-2
+            /* 左 */
+            border-s-4
+            border-l-accent-600
+            rounded-l-md
+            shadow-sbump;
+        text-shadow: var(--text-shadow);
+    }
+    .sl-markdown-content h5:not(:where(.not-content *)) {
+        @apply text-lg
+            font-semibold
+            text-accent-600
+            mb-1;
+    }
+
+    .sl-markdown-content code:not(:where(.not-content *)) {
+        @apply text-base
+            bg-slate-800
+            p-1
+            rounded
+            text-accent-200;
+    }
+
+    .sl-markdown-content code {
+        @apply text-base
+            bg-slate-800
+            p-1
+            rounded
+            text-accent-200;
+    }
+
+    .sl-markdown-content a:not(:where(.not-content *)) {
+        color: var(--sl-color-text);
+    }
+
+    .expressive-code .frame pre {
+        @apply shadow-s-depressed bg-gray-600;
+    }
+
+    .sl-markdown-content code {
+        @apply shadow-2xs-depressed bg-gray-600 px-2 py-1;
+    }
+
+    .sl-markdown-content .starlight-aside--note {
+        /* @apply bg-accent-500; */
+        @apply shadow-s-depressed;
+    }
+
+    .sl-markdown-content :is(th, td):not(:where(.not-content *)) {
+        @apply border;
+    }
+}

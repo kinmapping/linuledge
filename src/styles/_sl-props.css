@@ -15,8 +15,8 @@
     --text-shadow: 3px 3px 8px hsl(65, 90%, 55%, 0.15),
         -3px -3px 8px hsl(65, 90%, 55%, 0.15);
 
-    --sl-color-white: hsla(0, 0%, 100%, 0.8);
-    --sl-color-text: hsla(220, 12%, 85%, 0.8);
+    --sl-color-white: hsla(0, 0%, 100%, 0.9);
+    --sl-color-text: hsla(222, 20%, 90%, 0.9);
     --color-gray-1: hsla(220, 19%, 94, 0.8);
     --color-gray-2: hsla(223, 6%, 77%);
     --color-gray-3: hsla(227, 6%, 56%);
@@ -27,6 +27,33 @@
     --color-gray-8: hsla(180, 11%, 2%, 0.8);
     --color-gray-9: hsla(0, 0%, 0%, 0.9);
     --color-black: hsla(0, 0%, 0%, 1);
+
+    /* orange */
+    --sl-hue-orange: 41;
+    --sl-color-orange-low: hsl(var(--sl-hue-orange), 39%, 22%, 0.65);
+    --sl-color-orange: hsl(var(--sl-hue-orange), 82%, 63%);
+    --sl-color-orange-high: hsl(var(--sl-hue-orange), 82%, 87%);
+    /* green */
+    --sl-hue-green: 101;
+    --sl-color-green-low: hsl(var(--sl-hue-green), 39%, 22%, 0.65);
+    --sl-color-green: hsl(var(--sl-hue-green), 82%, 63%);
+    --sl-color-green-high: hsl(var(--sl-hue-green), 82%, 80%);
+    /* blue */
+    --sl-hue-blue: 234;
+    --sl-color-blue-low: hsl(var(--sl-hue-blue), 54%, 20%, 0.65);
+    --sl-color-blue: hsl(var(--sl-hue-blue), 100%, 60%);
+    --sl-color-blue-high: hsl(var(--sl-hue-blue), 100%, 87%);
+    /* purple */
+    --sl-hue-purple: 281;
+    --sl-color-purple-low: hsl(var(--sl-hue-purple), 39%, 22%, 0.65);
+    --sl-color-purple: hsl(var(--sl-hue-purple), 82%, 63%);
+    --sl-color-purple-high: hsl(var(--sl-hue-purple), 82%, 89%);
+    /* red */
+    --sl-hue-red: 339;
+    --sl-color-red-low: hsl(var(--sl-hue-red), 39%, 22%, 0.65);
+    --sl-color-red: hsl(var(--sl-hue-red), 82%, 63%);
+    --sl-color-red-high: hsl(var(--sl-hue-red), 82%, 87%);
+
     --sl-font: "Hannari";
     /* --sl-font: "Hannari", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
@@ -70,12 +97,12 @@
 
     --scale-factor: 0.9;
 
-    --sl-text-2xs: 0.67rem; /* 9.6px */
-    --sl-text-xs: 0.75rem; /* 10.4px */
-    --sl-text-sm: 0.8rem; /* 11.2px */
-    --sl-text-base: 0.88rem; /* 12.8px */
-    --sl-text-lg: 0.95rem; /* 14.4px */
-    --sl-text-xl: 1rem; /* 16px */
+    --sl-text-2xs: 0.75rem; /* 9.6px */
+    --sl-text-xs: 0.8rem; /* 10.4px */
+    --sl-text-sm: 0.88rem; /* 11.2px */
+    --sl-text-base: 0.95rem; /* 12.8px */
+    --sl-text-lg: 1rem; /* 14.4px */
+    --sl-text-xl: 1.1rem; /* 16px */
     --sl-text-2xl: 1.2rem; /* 19.2px */
     --sl-text-3xl: 1.4rem; /* 23.2px */
     --sl-text-4xl: 1.7rem; /* 28px */
