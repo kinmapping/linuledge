@@ -1,0 +1,53 @@
+---
+title: SimpleTable
+description: SimpleTable コンポーネントの紹介
+tags:
+  - "Astro"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: SimpleTable
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 2
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { SimpleTable } from "@components/SimpleTable.tsx";
+
+## 概要
+
+`<SimpleTable>` コンポーネントは表をスタイルして、シンプルな表を利用した図形を書くのに適しています。
+フレキシブルな colspan と rowspan を使用してせるセル結合の表現も行えます。
+
+```astro
+import { SimpleTable } from "@components/SimpleTable.tsx";
+<SimpleTable
+  data={{
+    thead: [],
+    tbody: [
+      ["値", "0", "0", "0", "10", "1"],
+      ["アドレス", "1", "2", "3", "4", "5"],
+    ],
+    tfoot: [["変数", "x", "_", "_", "_", "y"]],
+  }}
+  isRowFirstHeader={true}
+  colgroup={[1, 4, 1]}
+  thStyle={{ textAlign: "center", width: "auto", border: "none", padding: "0 0.5rem" }}
+/>
+```
+
+<SimpleTable
+  data={{
+    thead: [],
+    tbody: [
+      ["値", "0", "0", "0", "10", "1"],
+      ["アドレス", "1", "2", "3", "4", "5"],
+    ],
+    tfoot: [["変数", "x", "_", "_", "_", "y"]],
+  }}
+  isRowFirstHeader={true}
+  colgroup={[1, 4, 1]}
+  thStyle={{ textAlign: "center", width: "auto", border: "none", padding: "0 0.5rem" }}
+/>

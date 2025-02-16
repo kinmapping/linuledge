@@ -1,187 +1,167 @@
 import type React from 'react';
 
-export interface SpanData {
-    positionX: number;
-    positionY: number;
-    span: number;
-}
-
-// export interface ColgroupData {
-//     span: number;
-//     border?: boolean;
+// export interface cellStyle {
+//     align?: 'left' | 'center' | 'right'; // セル内文字位置（既定は left）
+//     width?: string; // セルの幅
+//     border?: boolean; // 枠線表示
 // }
 
 export interface SimpleTableProps {
-    data: string[][]; // セルの内容を行列として指定
-    isThead?: boolean; // data の最初の行を <thead> とするか
-    isTfoot?: boolean; // data の最後の行を <tfoot> とするか
-    isRowFirstHeader?: boolean; // 各行の最初のセルを <th> で出力するか
-    colgroup?: number[]; // 各 col の span 値を指定（例: [2, 3]）
-    colspan?: SpanData[]; // 各セルの colspan 設定（1始まりの座標 x, y と n の値）
-    rowspan?: SpanData[]; // 各セルの rowspan 設定（1始まりの座標 x, y と n の値）
-    rowgroup?: number[]; // body 部分の行をグループ分割する。各数値はそのグループの行数
-    thStyle?: {
-        align?: 'left' | 'center' | 'right'; // th 要素の文字位置（既定値は left）
-        width?: string; // th 要素の幅
-        border?: boolean; // th 要素の枠線を表示するか
+    data: {
+        thead: string[][]; // ヘッダー行
+        tbody: string[][]; // 本文行
+        tfoot: string[][]; // フッター行
     };
-    tdStyle?: {
-        align?: 'left' | 'center' | 'right'; // td 要素の文字位置（既定値は left）
-        width?: string; // td 要素の幅
-        border?: boolean; // td 要素の枠線を表示するか
-    };
+    isRowFirstHeader?: boolean; // 本文・フッター各行の最初のセルを <th> として出力するか
+    colgroup?: number[]; // 各列の span 値（例: [2, 3]）
+    thStyle?: React.CSSProperties;
+    tdStyle?: React.CSSProperties;
 }
+
+interface ProcessedCell {
+    content: string;
+    colspan: number;
+    rowspan: number;
+    hidden: boolean; // すでに merge 済みの場合はレンダリングしない
+}
+
+/**
+ * セクション内（thead/tbody/tfoot）の 2 次元配列データを処理し、
+ * ・横方向の結合："_" の場合は左セルに結合（colspan 増加）
+ * ・縦方向の結合："|" の場合は上セルに結合（rowspan 増加）
+ * するための helper 関数
+ */
+const processSection = (rows: string[][]): ProcessedCell[][] => {
+    // 最初に各セルの初期状態を作成
+    const processed: ProcessedCell[][] = rows.map(row =>
+        row.map(cell => ({
+            content: cell,
+            colspan: 1,
+            rowspan: 1,
+            hidden: false,
+        })),
+    );
+
+    // 横方向のマージ：セルの内容が "_" の場合、左側の表示セルに結合する
+    for (let i = 0; i < processed.length; i++) {
+        const row = processed[i];
+        for (let j = 0; j < row.length; j++) {
+            if (row[j].hidden) continue;
+            if (row[j].content === '_') {
+                // 左側で未非表示のセルを探す
+                let k = j - 1;
+                while (k >= 0 && row[k].hidden) {
+                    k--;
+                }
+                if (k >= 0) {
+                    row[k].colspan += 1;
+                    row[j].hidden = true;
+                }
+            }
+        }
+    }
+
+    // 縦方向のマージ：セルの内容が通常値の場合、下行同一列のセルが "|" なら merge する
+    const rowCount = processed.length;
+    // ※各行の列数は同じである前提
+    const colCount = processed[0]?.length || 0;
+    for (let j = 0; j < colCount; j++) {
+        for (let i = 0; i < rowCount; i++) {
+            const cell = processed[i][j];
+            if (cell.hidden) continue;
+            // 横マージ済みや、結合対象記号の場合は対象外
+            if (cell.content === '_' || cell.content === '|') continue;
+            let rowspanCount = 1;
+            let r = i + 1;
+            while (r < rowCount) {
+                if (j < processed[r].length && processed[r][j].content === '|') {
+                    processed[r][j].hidden = true;
+                    rowspanCount++;
+                    r++;
+                } else {
+                    break;
+                }
+            }
+            cell.rowspan = rowspanCount;
+        }
+    }
+    return processed;
+};
 
 const SimpleTable: React.FC<SimpleTableProps> = ({
     data,
-    isThead = false,
-    isTfoot = false,
     isRowFirstHeader = false,
     colgroup = [],
-    colspan = [],
-    rowspan = [],
-    rowgroup,
-    thStyle = { align: 'left', width: 'auto', border: true },
-    tdStyle = { align: 'left', width: 'auto', border: true },
+    thStyle = { textAlign: 'center', width: 'auto', border: '1px solid', padding: '0 0.5rem' },
+    tdStyle = { textAlign: 'right', width: '3rem', border: '1px solid', padding: '0 0.5rem' },
 }) => {
-    // ヘッダー・フッター・body 行の抽出
-    let headRow: string[] | undefined;
-    let footRow: string[] | undefined;
-    let bodyRows: string[][] = [];
-
-    if (isThead && data.length > 0) {
-        headRow = data[0];
-    }
-    if (isTfoot && data.length > 0) {
-        footRow = data[data.length - 1];
-    }
-    if (isThead && isTfoot) {
-        bodyRows = data.slice(1, data.length - 1);
-    } else if (isThead) {
-        bodyRows = data.slice(1);
-    } else if (isTfoot) {
-        bodyRows = data.slice(0, data.length - 1);
-    } else {
-        bodyRows = data;
-    }
-
-    // rowgroup 指定による body 行のグループ分け
-    let groupedBodyRows: string[][][] = [];
-    if (rowgroup && rowgroup.length > 0) {
-        let index = 0;
-        for (const groupCount of rowgroup) {
-            groupedBodyRows.push(bodyRows.slice(index, index + groupCount));
-            index += groupCount;
-        }
-        if (index < bodyRows.length) {
-            groupedBodyRows.push(bodyRows.slice(index));
-        }
-    } else {
-        groupedBodyRows = [bodyRows];
-    }
+    // 各セクションを処理
+    const headerRows = data.thead ? processSection(data.thead) : undefined;
+    const bodyRows = data.tbody ? processSection(data.tbody) : [];
+    const footerRows = data.tfoot ? processSection(data.tfoot) : undefined;
 
     /**
-     * renderCell 関数
-     * ・JSX で <td> もしくは <th> を返す
-     * ・rowIndex / colIndex は 1 始まり（colspan/rowspan の指定と合わせる）
+     * 各行（ProcessedCell[]）をレンダリング。
+     * ヘッダーセクションでは常に <th> 、
+     * 本文・フッターでは isRowFirstHeader の場合先頭セルを <th> にする
      */
-    const renderCell = (content: string, rowIndex: number, colIndex: number) => {
-        let cellColspan: number | undefined = undefined;
-        let cellRowspan: number | undefined = undefined;
-
-        const foundColspan = colspan.find(
-            item => item.positionX === colIndex + 1 && item.positionY === rowIndex,
-        );
-        if (foundColspan) {
-            cellColspan = foundColspan.span;
-        }
-        // console.log({ content, cellColspan });
-
-        const foundRowspan = rowspan.find(
-            item => item.positionX === colIndex + 1 && item.positionY === rowIndex,
-        );
-        if (foundRowspan) {
-            cellRowspan = foundRowspan.span;
-        }
-        // console.log({ cellRowspan });
-
-        if (isRowFirstHeader && colIndex === 0) {
-            return (
-                <th
-                    key={colIndex}
-                    // className={thStyle.border ? 'border' : ''}
-                    colSpan={cellColspan}
-                    rowSpan={cellRowspan}
-                    align={thStyle.align}
-                    style={{
-                        width: thStyle.width,
-                        padding: '0 0.5rem',
-                        border: thStyle.border ? '1px solid var(--sl-color-white)' : 'none',
-                    }}
-                >
-                    {content}
-                </th>
-            );
-        }
-        return (
-            <td
-                key={colIndex}
-                // className={tdStyle.border ? 'border' : ''}
-                colSpan={cellColspan}
-                rowSpan={cellRowspan}
-                align={tdStyle.align}
-                style={{
-                    width: tdStyle.width,
-                    padding: '0 0.5rem',
-                    border: tdStyle.border ? '1px solid var(--sl-color-white)' : 'none',
-                }}
-            >
-                {content}
-            </td>
-        );
-    };
+    const renderRow = (row: ProcessedCell[], rowIndex: number, isHeaderSection: boolean) => (
+        <tr key={rowIndex}>
+            {row.map((cell, colIndex) => {
+                if (cell.hidden) return null;
+                if (isHeaderSection) {
+                    return (
+                        <th
+                            key={colIndex.toString()}
+                            colSpan={cell.colspan}
+                            rowSpan={cell.rowspan}
+                            style={{ ...thStyle }}
+                        >
+                            {cell.content}
+                        </th>
+                    );
+                }
+                if (isRowFirstHeader && colIndex === 0) {
+                    return (
+                        <th
+                            key={colIndex.toString()}
+                            colSpan={cell.colspan}
+                            rowSpan={cell.rowspan}
+                            style={{ ...thStyle }}
+                        >
+                            {cell.content}
+                        </th>
+                    );
+                }
+                return (
+                    <td
+                        key={colIndex.toString()}
+                        colSpan={cell.colspan}
+                        rowSpan={cell.rowspan}
+                        style={{ ...tdStyle }}
+                    >
+                        {cell.content}
+                    </td>
+                );
+            })}
+        </tr>
+    );
 
     return (
         <table className='min-w-full border-collapse'>
-            {colgroup && colgroup.length > 0 && (
+            {colgroup.length > 0 && (
                 <colgroup>
-                    {colgroup.map(spanValue => (
-                        <col key={spanValue.toString()} span={spanValue} />
+                    {colgroup.map((span, index) => (
+                        <col key={index.toString()} span={span} />
                     ))}
                 </colgroup>
             )}
 
-            {headRow && (
-                <thead>
-                    <tr>{headRow.map((cell, j) => renderCell(cell, 1, j))}</tr>
-                </thead>
-            )}
+            {headerRows && <thead>{headerRows.map((row, i) => renderRow(row, i, true))}</thead>}
 
-            {groupedBodyRows.map((group, groupIndex) => (
-                <tbody key={groupIndex.toString()}>
-                    {group.map((row, i) => {
-                        // 全体での行番号の計算
-                        const overallIndex =
-                            (headRow ? 1 : 0) +
-                            groupedBodyRows
-                                .slice(0, groupIndex)
-                                .reduce((sum, g) => sum + g.length, 0) +
-                            i +
-                            1;
-                        return (
-                            <tr key={i.toString()}>
-                                {row.map((cell, j) => renderCell(cell, overallIndex, j))}
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            ))}
+            {bodyRows && <tbody>{bodyRows.map((row, i) => renderRow(row, i, false))}</tbody>}
 
-            {footRow && (
-                <tfoot>
-                    <tr>{footRow.map((cell, j) => renderCell(cell, data.length, j))}</tr>
-                </tfoot>
-            )}
+            {footerRows && <tfoot>{footerRows.map((row, i) => renderRow(row, i, false))}</tfoot>}
         </table>
     );
 };

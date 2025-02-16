@@ -18,7 +18,73 @@ import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
 import LinkPreview from "@components/LinkPreview.astro";
 import MermaidChart from "@components/MermaidChart.astro";
 import Table from "@components/Table.astro";
+import SimpleTable from "@components/SimpleTable.tsx";
 
 ## cgo
 
 cgo は、Go 言語における cgo を行うための機能です。
+
+```tsx
+export interface cellStyle {
+  align?: 'left' | 'center' | 'right'; // td 要素の文字位置（既定値は left）
+  width?: string; // td 要素の幅
+  border?: boolean; // td 要素の枠線を表示するか
+}
+
+export interface SimpleTableProps {
+    data: {
+      thead: string[][];
+      tbody: string[][];
+      tfoot: string[][];
+    };
+    isRowFirstHeader?: boolean; // 各行の最初のセルを <th> で出力するか
+    colgroup?: number[]; // 各 col の span 値を指定（例: [2, 3]）
+    thStyle?: cellStyle;
+    tdStyle?: cellStyle;
+}
+
+<SimpleTable
+  data={
+    thead:[
+      ["/", "見出し1", "見出し2", "見出し3", "見出し4"],
+    ],
+    tbody:
+    [
+      ["値", "0", "0", "0", "0"],
+      ["|", "1", "2", "3", "4"],
+    ],
+    tfoot:[
+      ["変数", "x", "_", "_", "_"],
+      ["関数", "main", "_", "_", "_"],
+    ]
+  }
+  isRowFirstHeader={true}
+  colgroup={[1, 4]}
+  thStyle={{
+    align: "right",
+    width: "auto",
+    border: false,
+  }}
+  tdStyle={{
+    align: "right",
+    width: "3rem",
+    border: true,
+  }}
+/>
+```
+
+<SimpleTable
+  data={{
+    tbody: [
+      ["値", "0", "0", "0", "0"],
+      ["|", "1", "2", "3", "4"],
+    ],
+    tfoot: [
+      ["変数", "x", "_", "_", "_"],
+      ["関数", "main", "_", "_", "_"],
+    ],
+  }}
+  isRowFirstHeader={true}
+  colgroup={[1, 4]}
+  thStyle={{ textAlign: "center", width: "auto", border: "none", padding: "0 0.5rem" }}
+/>

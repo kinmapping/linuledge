@@ -250,4 +250,40 @@ export default [
             },
         ],
     },
+    {
+        label: 'pnpm',
+        collapsed: true,
+        items: [
+            {
+                label: 'インデックス',
+                link: 'pnpm',
+            },
+            {
+                label: 'pnpm コマンド',
+                autogenerate: { directory: 'pnpm/cmds' },
+            },
+            {
+                label: 'pnpm 使用例',
+                autogenerate: { directory: 'pnpm/examples' },
+            },
+        ],
+    },
+    {
+        label: 'AWS',
+        collapsed: true,
+        items: [
+            {
+                label: 'インデックス',
+                link: 'aws',
+            },
+            {
+                label: 'AWS CLI',
+                autogenerate: { directory: 'aws/cli' },
+            },
+            {
+                label: '記事',
+                autogenerate: { directory: 'aws/posts' },
+            },
+        ],
+    },
 ];
