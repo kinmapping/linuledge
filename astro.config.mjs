@@ -4,6 +4,7 @@ import react from '@astrojs/react';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import { defineConfig } from 'astro/config';
+// import remarkSubSuper from 'remark-sub-super';
 import { loadEnv } from 'vite';
 
 // ヘルパー関数経由で環境変数を呼び出す
@@ -16,6 +17,12 @@ import sidebarConfig from './sidebar.config.mjs';
 export default defineConfig({
     // サイトマップ有効化
     site: SITE_URL,
+    // markdown: {
+    //     // shikiConfig: {
+    //     //     theme: 'one-dark-pro',
+    //     // },
+    //     // remarkPlugins: [remarkSubSuper],
+    // },
     integrations: [
         react(),
         db(),

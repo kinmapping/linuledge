@@ -1,5 +1,5 @@
 import starlightPlugin from '@astrojs/starlight-tailwind';
-import type { Config } from 'tailwindcss';
+// import type { Config } from '@astrojs/tailwind';
 
 // Generated color palettes
 const accent = {
@@ -40,7 +40,7 @@ export default {
             // sans: ['和田研細丸ゴシック'],
             // sans: ['"Atkinson Hyperlegible"'],
             // 好みのコードフォント。Starlightはデフォルトでシステムの等幅フォントを使用します。
-            mono: ['"IBM Plex Mono"'],
+            // mono: ['"IBM Plex Mono"'],
         },
         fontSize: {
             '2xs': '0.67rem',
@@ -82,4 +82,4 @@ export default {
         //     );
         // })
     ],
-} satisfies Config;
+};
