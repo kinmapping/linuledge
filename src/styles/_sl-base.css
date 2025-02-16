@@ -102,12 +102,29 @@ HTML の基本要素（例：見出し、段落、リスト、コードブロッ
         @apply shadow-2xs-depressed bg-gray-600 px-2 py-1;
     }
 
-    .sl-markdown-content .starlight-aside--note {
-        /* @apply bg-accent-500; */
-        @apply shadow-s-depressed;
+    .sl-markdown-content {
+        & .starlight-aside--note,
+        & .starlight-aside--tip,
+        & .starlight-aside--caution,
+        & .starlight-aside--danger {
+            /* @apply bg-accent-500; */
+            @apply shadow-s-depressed;
+        }
     }
 
     .sl-markdown-content :is(th, td):not(:where(.not-content *)) {
         @apply border;
+    }
+
+    .sl-markdown-content hr:not(:where(.not-content *)) {
+        border: 0;
+        border-bottom: 1px solid var(--sl-color-text);
+    }
+
+    .sl-markdown-content blockquote:not(:where(.not-content *)) {
+        border-inline-start: 1px solid var(--accent-500);
+        padding-inline-start: 1rem;
+        background-color: var(--color-gray-6);
+        @apply shadow-s-depressed p-3.5;
     }
 }
