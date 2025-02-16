@@ -1,0 +1,44 @@
+---
+title: cache
+description: cache コマンドについての基本知識
+tags:
+  - "pnpm"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: cache
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 1
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps, FileTree } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import Table from "@components/Table.astro";
+
+## 概要
+
+<LinkPreview url="https://pnpm.io/cli/cache-list" />
+<LinkPreview url="https://pnpm.io/cli/cache-list-registries" />
+<LinkPreview url="https://pnpm.io/cli/cache-list" />
+<LinkPreview url="https://pnpm.io/cli/cache-list" />
+
+## サブコマンド
+
+### cache list
+
+利用可能なパッケージのメタデータ・キャッシュを一覧表示します。 glob によるフィルタリングをサポートしています。
+
+### cache list-registries
+
+ローカルにメタデータキャッシュを持つすべてのレジストリをリストする。
+
+### cache view
+
+指定されたパッケージのキャッシュから情報を表示します。
+
+### cache delete
+
+指定されたパッケージのメタデータキャッシュを削除します。 パターンをサポートしています。

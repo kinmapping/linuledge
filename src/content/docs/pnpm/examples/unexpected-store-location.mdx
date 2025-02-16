@@ -1,0 +1,104 @@
+---
+title: 予期せぬストア場所
+description: 予期せぬストア場所についての基本知識
+tags:
+  - "pnpm"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: 予期せぬストア場所
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 1
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps, FileTree } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import Table from "@components/Table.astro";
+
+## 予期せぬストア場所
+
+```bash
+  ERR_PNPM_UNEXPECTED_STORE  Unexpected store location
+
+The dependencies at "/Users/t_inoue/Documents/01_ProjectsApp/04_JavaScript/linuledge/node_modules" are currently linked from the store at "/Users/t_inoue/Library/pnpm/store/v10".
+
+pnpm now wants to use the store at "/Users/t_inoue/Library/pnpm/store/v3" to link dependencies.
+
+If you want to use the new store location, reinstall your dependencies with "pnpm install".
+
+You may change the global store location by running "pnpm config set store-dir <dir> --global".
+(This error may happen if the node_modules was installed with a different major version of pnpm)
+
+
+Astro could not update your astro.config.js file safely.
+Reason: Unable to install dependencies
+
+You will need to add these integration(s) manually.
+Documentation: https://docs.astro.build/en/guides/integrations-guide/
+  Location:
+    /Users/t_inoue/Documents/01_ProjectsApp/04_JavaScript/linuledge/node_modules/.pnpm/astro@5.2.5_@types+node@22.13.1_jiti@1.21.7_rollup@4.34.4_typescript@5.7.3_yaml@2.7.0/node_modules/astro/dist/cli/add/index.js:217:31
+  Stack trace:
+    at add (file:///Users/t_inoue/Documents/01_ProjectsApp/04_JavaScript/linuledge/node_modules/.pnpm/astro@5.2.5_@types+node@22.13.1_jiti@1.21.7_rollup@4.34.4_typescript@5.7.3_yaml@2.7.0/node_modules/astro/dist/cli/add/index.js:217:31)
+    at async runCommand (file:///Users/t_inoue/Documents/01_ProjectsApp/04_JavaScript/linuledge/node_modules/.pnpm/astro@5.2.5_@types+node@22.13.1_jiti@1.21.7_rollup@4.34.4_typescript@5.7.3_yaml@2.7.0/node_modules/astro/dist/cli/index.js:124:7)
+ ELIFECYCLE  Command failed with exit code 1.
+```
+
+## エラー文の解説
+
+```
+The dependencies at "/Users/t_inoue/Documents/01_ProjectsApp/04_JavaScript/linuledge/node_modules" are currently linked from the store at "/Users/t_inoue/Library/pnpm/store/v10".
+```
+
+`Users/t_inoue/Documents/01_ProjectsApp/04_JavaScript/linuledge/node_modules` にある依存関係は、現在 `/Users/t_inoue/Library/pnpm/store/v10` にあるストアからリンクされています。
+
+```
+pnpm now wants to use the store at "/Users/t_inoue/Library/pnpm/store/v3" to link dependencies.
+
+pnpm は依存関係をリンクするために「/Users/t_inoue/Library/pnpm/store/v3 」にあるストアを使いたがるようになった。
+
+If you want to use the new store location, reinstall your dependencies with "pnpm install".
+
+新しいストアの場所を使いたい場合は、「pnpm install 」で依存関係を再インストールする。
+
+You may change the global store location by running "pnpm config set store-dir <dir> --global".
+pnpm config set store-dir <dir> --global "を実行することで、グローバルストアの場所を変更できます。
+
+(This error may happen if the node_modules was installed with a different major version of pnpm)
+(このエラーは、node_modules が異なるメジャーバージョンの pnpm でインストールされた場合に発生する可能性があります)
+```
+
+```
+Astro could not update your astro.config.js file safely.
+Reason: Unable to install dependencies
+```
+
+_Astro は、astro.config.js ファイルを安全に更新できませんでした。_  
+_理由: 依存関係をインストールできない_
+
+## 解決していく
+
+### ストアとは
+
+pnpm は以下の特徴があります。
+
+- ディスク容量の節約
+  インストールしたパッケージのファイルはディスク上の 1 つの場所に保存される。たとえば新しくプロジェクトを作成して、既に他のプロジェクトでインストール済みのパッケージをインストールした場合、重複してインストールされるのではなく、グローバルなストアに保存されているファイルへのハードリンクが作成されるため、ディスク領域を消費せずに済む。
+- インストール速度の向上
+  インストールは Resolving, Fetching, Linking、の 3 段階で行われる。従来のインストールでは全てのパッケージが前のステージを完了しないと次のステージが実行されなかったが、パッケージごとにステージを進めるようになったため時間が短縮される
+- 厳格さ
+  node_modules 直下には直接インストールしたパッケージのシンボリックリンクしか置かれないため、直接使用しているパッケージが明確かつ、それ以外のパッケージの import ができないようになっている。
+- Monorepo に対応
+  リポジトリ内マルチパッケージをサポート
+
+<LinkPreview url="https://zenn.dev/s_takashi/articles/7358a32b1a6d52" />
+
+### ストア場所を確認する
+
+pnpm のストア場所は、`pnpm-store-path` コマンドで確認することができます。
+
+```bash
+pnpm store path
+```

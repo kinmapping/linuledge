@@ -1,0 +1,91 @@
+---
+title: server
+description: server コマンドについての基本知識
+tags:
+  - "pnpm"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: server
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 1
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps, FileTree } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import Table from "@components/Table.astro";
+
+## 概要
+
+<LinkPreview url="https://pnpm.io/cli/server" />
+パッケージストアの管理
+
+## サブコマンド
+
+### start
+
+ストアとのすべてのやりとりを行うサーバを起動する。 他のコマンドは、ストアに関連するタスクをこのサーバーに委譲する。
+
+### stop
+
+store サーバーを停止する。
+
+### status
+
+実行中のサーバーに関する情報を表示する。
+
+## オプション
+
+<Table
+  colWidth={["15rem"]}
+  columns={["オプション", "デフォルト", "type", "説明"]}
+  data={[
+    ["`--background`", "false", "Boolean", "UNIXシステムのデーモン化と同様に、サーバーをバックグラウンドで実行する。"],
+    ["`--network-concurrency`", "null", "Number", "同時に処理するネットワークリクエストの最大数。"],
+    [
+      "`--protocol`",
+      "auto",
+      "auto | tcp | ipc",
+      "サーバーが使用する通信プロトコル。 これを `auto` に設定すると、TCP を使用する Windows を除くすべてのシステムで IPC が使用される。",
+    ],
+    [
+      "`--port`",
+      "5813",
+      "port number",
+      "通信に TCP を使用する場合に使用するポート番号。 ポートが指定され、プロトコルが `auto` に設定されている場合、システムの種類に関係なく、プロトコルは自動的に TCP を使用するように設定されます。",
+    ],
+    ["`--store-dir`", "<home>/.pnpm-store", "path", "コンテンツ・アドレサブル・ストアに使用するディレクトリ"],
+    [
+      "`--[no-]lockfile`",
+      "false",
+      "Boolean",
+      "サーバーの実行中に、パッケージストアを外部プロセスに対して不変にするかどうかを設定します。",
+    ],
+    ["`--ignore-stop-requests`", "false", "Boolean", "`pnpm server stop` を使用してサーバーを停止することを防ぎます。"],
+    [
+      "`--ignore-upload-requests`",
+      "false",
+      "Boolean",
+      "インストール中に新しい副作用キャッシュが作成されるのを防ぎます。",
+    ],
+  ]}
+/>
+
+### `--background`
+
+### `--network-concurrency`
+
+### `--protocol`
+
+### `--port`
+
+### `--store-dir`
+
+### `--[no-]lockfile`
+
+### `--ignore-stop-requests`
+
+### `--ignore-upload-requests`

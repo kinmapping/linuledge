@@ -61,3 +61,4 @@ examples/**/env.d.ts
 *.code-workspace
 
 shells/log/*
+.npmrc

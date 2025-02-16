@@ -923,10 +923,13 @@ n -= 1
 n--
 ```
 
-## 定数
+## 定数(const)
 
 多くの言語のイミュータブル(変更不可)なものを宣言する方法に定数というものがあります。
 Go ではそのために `const` を使います。ほかの言語と同様に動作するかのように見えますが、違いがあります。
+
+- コンパイル時に評価される値は、`const` 宣言を使って名前をつけることができます。
+- こうして定義した定数は、その後変更できません。(イミュータブル(変更不可))
 
 <LinkPreview url="https://github.com/mushahiroyuki/lgo/blob/main/example/ch02/ex0203.go" />
 
@@ -950,8 +953,8 @@ func main() {
 	fmt.Println(x)
 	fmt.Println(y)
 
-	x = x + 1
-	y = "bye"
+	x = x + 1  // cannot assign to x (neither addressable nor a map index expression)
+	y = "bye" // cannot assign to y (neither addressable nor a map index expression)
 
 	fmt.Println(x)
 	fmt.Println(y)
@@ -960,25 +963,27 @@ func main() {
 
 こちらを実行すると、エラーとなります。
 
-```
-./prog.go:20:2: cannot assign to x (neither addressable nor a map index expression)
-./prog.go:21:2: cannot assign to y (neither addressable nor a map index expression)
-
-Go build failed.
-```
-
 定数を宣言するのはパッケージレベルあるいは関数内です。
-var と同様に、`()` で囲んで、関連する複数の定数を宣言することもできます。(変数と違いまとめて書く方が効率的)
-Go の const はリテラルに名前をつけるためのものです。コンパイル時に決定できる値を保持できるだけなのです。
+`var` と同様に、`()` で囲んで、関連する複数の定数を宣言することもできます。(変数と違いまとめて書く方が効率的)
 
-つまり、代入できるのは
+```go
+// 例
+const (
+  Pi   = 3.1415
+  Lang = "Go"
+)
+```
 
-- 数値リテラル
-- 文字列
-- true および false
-- rune
-- complex, real, imag, len, cap, unsafe.Sizeof などの組み込み関数
-- 上で挙げた値と演算子から構成される式
+Go の `const` はリテラルに名前をつけるためのもの(コンパイル時に決定可能なリテラルに名前を付けるための仕組み)です。実行時に計算されるような値や変数は使えません。コンパイル時に決定できる値を保持できるだけなのです。
+
+つまり、代入できる定数に使える値は
+
+- 数値リテラル: (`10`, `3.14`)
+- 文字列: (`"Hello"`)
+- 真偽値: (`true` および `false`)
+- rune リテラル: (`'A'`)
+- 組み込み関数を使った式: (`complex`, `real`, `imag`, `len`, `cap`, `unsafe.Sizeof`)
+- これらの値や演算子を使って構成された式で、コンパイル時に確定できるもの
 
 ## 型つきの定数と型のない定数
 

@@ -1,0 +1,17 @@
+---
+title: pnpm
+description: pnpm
+tags:
+  - "pnpm"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: インデックス
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 1
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+## pnpm コマンド一覧

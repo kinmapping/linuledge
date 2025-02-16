@@ -1,0 +1,88 @@
+---
+title: config
+description: config コマンドについての基本知識
+tags:
+  - "pnpm"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: config
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 1
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps, FileTree } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import Table from "@components/Table.astro";
+
+## 概要
+
+<LinkPreview url="https://pnpm.io/cli/config" />
+
+設定ファイルを管理する。 設定ファイルは INI 形式である。
+ローカル設定ファイルはプロジェクトのルートの `.npmrc` である。
+
+グローバルな設定ファイルは以下にあります。
+
+`XDG_CONFIG_HOME` 環境変数が設定されている場合は、`$XDG_CONFIG_HOME/pnpm/rc` が設定されます。
+
+- **Windows**: `~/AppData/Local/pnpm/config/rc`
+- **macOS**: `~/Library/Preferences/pnpm/rc`
+- **Linux**: `~/.config/pnpm/rc`
+
+### コマンド例
+
+```bash frame=none
+pnpm config set <key> <value>
+pnpm config get <key>
+pnpm config delete <key>
+pnpm config list
+pnpm config list --json
+```
+
+## サブコマンド
+
+### set \<key\> \<value\>
+
+設定 \<key\> に \<value\> を設定します。
+
+### get \<key\>
+
+設定 \<key\> の値を取得します。
+
+### delete \<key\>
+
+設定 \<key\> を削除します。
+
+### list
+
+すべての設定を表示します。
+
+```bash frame=none
+pnpm config list
+# 設定を JSON 形式で表示します。
+pnpm config list --json
+```
+
+## Options
+
+### --json
+
+すべての設定を JSON 形式で表示します。
+
+### --global
+
+グローバルな設定ファイルに設定します。
+
+### --location
+
+`project` に設定すると、最も近い package.json の .npmrc ファイルが使用されます。
+`global` に設定すると、`--global` オプションを設定したのと同じパフォーマンスになる。
+
+```bash frame=none
+pnpm config set --location project <key> <value>
+pnpm config set --location global <key> <value>
+```
