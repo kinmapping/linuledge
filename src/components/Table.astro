@@ -7,9 +7,17 @@ interface Props {
     align?: 'left' | 'center' | 'right';
     caption?: string;
     colWidth?: string[];
+    isRowFirstHeader?: boolean;
 }
 
-const { columns, data, align = 'left', caption, colWidth } = Astro.props as Props;
+const {
+    columns,
+    data,
+    align = 'left',
+    caption,
+    colWidth,
+    isRowFirstHeader = false,
+} = Astro.props as Props;
 
 // data 内のそれぞれのレコード(要素である)の配列の要素数 と column の要素数が一致するか確認する処理を入れる
 // データの検証: 各行の要素数が列の数と一致するか
@@ -113,7 +121,27 @@ if (caption) {
                     last:rounded-br-md
                 ">
                     {row.map((cell, cellIndex) => (
-                        <td
+                        isRowFirstHeader && cellIndex === 0 ? (
+
+                            <th
+                                set:html={sanitizeAndDecodeHtml(cell)}
+                                is:raw
+                                class={`
+                                    text-white
+                                    px-2
+                                    py-1
+                                    bg-gray-600/50
+                                    border-spacing-0.5
+                                    last:rounded-tr-md
+                                    shadow-xs-distinct
+                                `}
+                                style={`
+                                    text-shadow: var(--text-shadow);
+                                `}
+                            />
+
+                        ) : (
+                            <td
                             set:html={sanitizeAndDecodeHtml(cell)}
                             class={`
                                 p-2
@@ -125,6 +153,8 @@ if (caption) {
                                 ${rowIndex === data.length - 1 && cellIndex === row.length - 1 ? 'rounded-br-md' : ''}
                             `}
                         />
+                        )
+
                     ))}
                 </tr>
             ))}
