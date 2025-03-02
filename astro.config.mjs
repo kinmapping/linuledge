@@ -4,6 +4,7 @@ import react from '@astrojs/react';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
 import { defineConfig } from 'astro/config';
+import rehypeMermaid from 'rehype-mermaid';
 // import remarkSubSuper from 'remark-sub-super';
 import { loadEnv } from 'vite';
 
@@ -17,22 +18,28 @@ import sidebarConfig from './sidebar.config.mjs';
 export default defineConfig({
     // サイトマップ有効化
     site: SITE_URL,
-    // markdown: {
-    //     // shikiConfig: {
-    //     //     theme: 'one-dark-pro',
-    //     // },
-    //     // remarkPlugins: [remarkSubSuper],
-    // },
+    markdown: {
+        // shikiConfig: {
+        //     theme: 'one-dark-pro',
+        // },
+        // remarkPlugins: [mdxMermaid],
+        // remarkPlugins: [[mdxMermaid.default, { output: 'svg' }]],
+        rehypePlugins: [[rehypeMermaid, { strategy: 'img-svg', dark: true }]],
+    },
+
     integrations: [
         react(),
         db(),
         starlight({
             title: 'Linuledge',
+
             components: {
                 MobileMenuToggle: './src/custom-components/MobileMenuToggle.astro',
                 Sidebar: './src/custom-components/Sidebar.astro',
                 MarkdownContent: './src/custom-components/MarkdownContent.astro',
                 PageFrame: './src/custom-components/PageFrame.astro',
+                // mermaid: Mermaid,
+                // mermaid: './src/components/Mermaid.astro',
             },
             defaultLocale: 'root',
             locales: {
