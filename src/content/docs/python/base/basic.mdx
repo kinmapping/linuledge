@@ -1,0 +1,1050 @@
+---
+title: 基本
+description: 基本
+tags:
+  - "Python"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: 基本
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 10
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+## Python とは
+
+### 沿革
+
+- グイド・ヴァンロッサム氏が 1991 年に公開したプログラミング言語
+- python は錦蛇の意味であるが、空飛ぶモンティパイソンから来ている
+- IEEE プログラミングランキング 2017 ~ 2024 年 連続 1 位
+  <LinkPreview url="https://spectrum.ieee.org/top-programming-languages-2024" />
+- Youtube、Instagram、Amazon、Facebook、Netflix、Spotify などで使われている
+
+### 特徴
+
+1. 人工知能やデータ解析のライブラリが豊富
+2. 文法がシンプル
+3. インタプリタ言語(反対はコンパイラ言語)ですぐ実行できる
+   Java などのようにコンパイルの事前実行を必要としない。他には、PHP、Ruby などもインタプリタ言語です。コンパイル言語に比較して処理の実行は遅い。
+
+## 基本的な構文
+
+### 基本的なルール
+
+- 処理分は改行で区切る
+- 処理のまとまりをインデントで指定する
+- 大文字と小文字は区別される
+
+```python
+print("Hello")
+for i in range(6):
+		# 先に "study" を繰り返し出力する
+		print("study")
+print("bye")
+```
+
+:::note[PEP8 -Style Guide for Python Code]
+
+Python 標準のコーディングスタイル
+
+- インデントは空白 4 個
+- コメントは説明したい処理の前にコメントだけの行として記述(コメントだけの行とする)
+
+:::
+
+### python ファイルの実行
+
+以下のようなファイルを作成する
+
+```python title="greeting.py"
+print("Good morning")
+print("Good afternoon")
+print("Good evening")
+print("Good night")
+print("Goodbye")
+```
+
+こちらを実行するには、
+
+```bash frame=none
+python greeting.py
+```
+
+### コメント
+
+- コメントは `#` で始める
+- コメントは実行されない
+
+```python
+# こんにちは
+print("Hello")
+```
+
+## 変数
+
+変数は `=` で代入する
+
+```python
+num = 1
+print(num)
+num = 3
+print(num)
+```
+
+こちらを実行すると、
+
+```bash frame=none
+1
+3
+```
+
+となります。
+
+:::caution[変数の命名規則]
+
+- 変数名は英数字とアンダースコアのみ使用できる
+- 数字は先頭に使用できない
+- 予約語は使用できない
+
+予約語の確認には以下の方法があります。
+
+```python
+# 予約語の出力
+import keyword
+print(keyword.kwlist)
+```
+
+こちらを実行すると、
+
+```bash frame=none
+python reserved_words.py
+
+['False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await', 'break', 'class', 'continue', 'def', 'del', 'elif', 'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while', 'with', 'yield']
+```
+
+となり現在の予約語の内容を確認できます。
+
+また、以下の方法で予約語かどうか調べたい文字列を渡すことで判定して確認ができます。
+
+```python
+import keyword
+print(keyword.iskeyword("for"))
+print(keyword.iskeyword("hoo"))
+```
+
+こちらを実行すると、
+
+```bash frame=none
+True
+False
+```
+
+となる(python の真偽値、True, False は大文字から始まります。)
+
+:::
+
+:::note[変数が格納しているのはメモリのアドレス]
+
+変数はデータを格納する箱のようなものと例えられますが実際には違います。どちらかというとオブジェクトと呼ばれる、変数に格納されるための値(文字列、数値などのリテラル)がメモリ上に存在していて、そのメモリのアドレスを参照していると考えた方が良いです。
+
+```python
+a = 1
+print(a)
+```
+
+この時点で、a は 1 のメモリ上のアドレスを格納しており、print(a) では格納したアドレスの値を出力しています。python では、このメモリのアドレスを識別するための 固有の ID 出力することができます。
+
+```python showLineNumbers {2, 5,6}
+a = 10
+print(id(a)) # 4359022376
+b = a
+a = 20
+print(id(b)) # 4359022376
+print(id(a)) # 4359022696
+```
+
+<Steps>
+
+1. 2 行目の 変数 a のオグジェクト ID は 4359022376 です。
+1. その後、変数 b に a のオブジェクト ID が格納されます。
+1. a は新たな値 20 に更新されますが、これは 20 が持つオブジェクト ID を参照することになります。
+1. そのため、5 行目の出力結果は 10 のオブジェクト ID です。
+1. 6 行目の出力結果は、20 のオブジェクト ID です。
+
+</Steps>
+
+:::
+
+## データ型
+
+データ型は変数に代入されたデータの型を指します。Python においては動的型付け言語のため、宣言時などで型を指定する必要はございません。
+
+しかし、型自体は存在しているため確認していきましょう。
+
+- **数値型**: 整数の int 型、浮動小数点の float 型, 複素数の complex 型
+- **文字列型**: 文字列の str 型
+- **真偽値型**: 真偽値の bool 型
+- **シーケンス型**: list 型, tuple 型, range 型
+- **マッピング型**: dict 型
+- **集合型**: set 型, frozenset 型
+- **バイナリ型**: bytes 型, bytearray 型, memoryview 型
+- **None 型**: NoneType 型
+
+python のデータ型は type() 関数で確認できます。
+
+```python
+a = 10
+print(type(a)) # <class 'int'>
+```
+
+### 数値型
+
+数値型は int (整数型)と float (浮動小数点型)があります。
+
+```python
+i = 10
+f = 10.0
+c = 1j
+
+print(type(i)) # <class 'int'>
+print(type(f)) # <class 'float'>
+print(type(c)) # <class 'complex'>
+```
+
+#### `int()`, `float()`, `complex()` の相互変換
+
+文字列を数値に変換できる
+
+```python
+s = "10"
+i = int(s)
+f = float(s)
+c = complex(s)
+
+print(i) # 10
+print(f) # 10.0
+print(c) # (10+0j)
+```
+
+### 文字列型
+
+文字列型は str 型です。
+
+```python
+s = "Hello"
+print(type(s)) # <class 'str'>
+```
+
+#### `str()` の相互変換
+
+数値を文字列に変換できる
+
+```python
+i = 10
+s = str(i)
+print(s) # 10
+
+l = [1, 2, 3]
+s = str(l)
+print(s) # [1, 2, 3]
+```
+
+### 真偽値型
+
+### 真偽値型
+
+bool 型は真偽値の bool 型です。
+
+```python
+b = True
+# 論理値を代入
+bool_value = (10 > 5)
+print(type(b)) # <class 'bool'>
+print(bool_value) # True
+print(type(bool_value)) # <class 'bool'>
+```
+
+### シーケンス型
+
+シーケンス型は list 型, tuple 型, range 型です。
+
+```python
+l = [1, 2, 3]
+t = (1, 2, 3)
+r = range(1, 10, 2)
+print(type(l)) # <class 'list'>
+print(type(t)) # <class 'tuple'>
+print(type(r)) # <class 'range'>
+```
+
+#### list 型
+
+複数の要素を格納する型
+
+```python
+l = [1, 2, 3]
+print(l) # [1, 2, 3]
+l2 = list((1, 2, 3))
+print(l2) # [1, 2, 3]
+l3 = list("Hello")
+print(l3) # ['H', 'e', 'l', 'l', 'o']
+l4 = list(range(1, 10, 2))
+print(l4) # [1, 3, 5, 7, 9]
+l5 = list(range(10))
+print(l5) # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+l6 = list(range(10, 0, -1))
+print(l6) # [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+l7 = [1, 2, 3, 4, [5, 6, 7], "Hello", True]
+print(l7) # [1, 2, 3, 4, [5, 6, 7], 'Hello', True]
+print(l7[0]) # 1
+print(l7[-1]) # True
+```
+
+list 型は、`[]` で要素を指定します。
+
+```python
+l7 = [1, 2, 3, 4, [5, 6, 7], "Hello", True]
+print(l7) # [1, 2, 3, 4, [5, 6, 7], 'Hello', True]
+print(l7[0]) # 1
+print(l7[-1]) # True
+
+# リストの要素を変更
+l7[0] = "Hello"
+print(l7) # ['Hello', 2, 3, 4, [5, 6, 7], 'Hello', True]
+
+# リストの要素を追加
+l7.append("World")
+print(l7) # ['Hello', 2, 3, 4, [5, 6, 7], 'Hello', True, 'World']
+
+# 開始位置と終了位置を指定して要素を取得
+print(l7[1:3]) # [2, 3]
+
+# 終了位置が指定されていないため、index 3 以降の要素を取得
+print(l7[3:]) # [4, [5, 6, 7], 'Hello', True, 'World']
+
+# 開始位置が指定されていないため、index 0 から終了位置 index 3 までの要素を取得
+print(l7[:3]) # [1, 2, 3]
+
+# リストの要素を削除
+l7.pop()
+print(l7) # ['Hello', 2, 3, 4, [5, 6, 7], 'Hello', True]
+```
+
+ステップ数を指定して、要素を取得することもできます。
+
+```python
+l = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+# リストの要素をステップ数で取得
+print(l[::2]) # [1, 3, 5, 7, 9]
+
+# マイナス値を指定すると逆順となり、-1 が最後の要素となる
+# リストの要素をステップ数で取得
+print(l[::-1]) # [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+
+# リストの要素をステップ数で取得
+print(l[::-2]) # [10, 8, 6, 4, 2]
+```
+
+#### tuple 型
+
+tuple 型は list 型と同じく複数の要素を格納する型です。
+list 型との違いは、tuple 型は要素の変更ができない点です。(要素の追加、削除、変更ができない)
+
+```python
+t = (1, 2, 3)
+print(type(t)) # <class 'tuple'>
+print(t) # (1, 2, 3)
+```
+
+#### range 型
+
+range 型は数値の範囲を生成する型です。
+
+```python
+r = range(10)
+print(r) # range(0, 10)
+```
+
+#### `list()`, `tuple()`, `range()` の相互変換
+
+```python
+l = list(range(10))
+print(l) # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+t = tuple(range(10))
+print(t) # (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+r = range(10)
+print(list(r)) # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
+
+### マッピング型
+
+マッピング型は dict 型(辞書型)です。
+一つの変数で複数の要素を取得できる。要素を "key" と "value" で管理する。
+
+```python
+d = {"name" : "John", "age" : 36, "city" : ["New York", "Los Angeles", "Chicago"]}
+print(type(d)) # <class 'dict'>
+print(d) # {'name': 'John', 'age': 36, 'city': ['New York', 'Los Angeles', 'Chicago']}
+print(d["name"]) # John
+print(d["age"]) # 36
+print(d["city"]) # ['New York', 'Los Angeles', 'Chicago']
+print(d["city"][0]) # New York
+```
+
+### 集合型
+
+集合型は set 型, frozenset 型です。
+
+```python
+s = {"apple", "banana", "cherry"}
+fs = frozenset({"apple", "banana", "cherry"})
+print(type(s)) # <class 'set'>
+print(type(fs)) # <class 'frozenset'>
+```
+
+#### set 型
+
+set 型は重複しない要素を格納する型です。また要素に順番はありません。
+list 型と同様に、要素の追加、削除、変更ができます。
+
+```python
+s = {"apple", "banana", "cherry"}
+print(s) # {'apple', 'banana', 'cherry'}
+
+# 指定の値を追加する
+s.add("orange")
+print(s) # {'apple', 'banana', 'cherry', 'orange'}
+
+# 指定の値を削除する
+s.remove("banana")
+print(s) # {'apple', 'cherry', 'orange'}
+
+# 集合には順番がないため、ランダムに要素を削除する
+s.pop()
+print(s) # {'apple', 'cherry'} # 2回目の実行では、{'apple', 'orange'} となったりした。
+
+# 集合を空にする
+s.clear()
+print(s) # set()
+```
+
+集合で、インデックスを利用した要素の取得をしたい場合は、list 型に変換してから取得します。
+
+```python
+s = {"apple", "banana", "cherry"}
+l = list(s)
+print(l[1]) # banana
+```
+
+異なるデータ型を要素に持たせても集合は成立します。
+
+```python
+s = {123, 1.23, (1, 2, 3), 123, 1.23, "Hello", True}
+print(s) # {1.23, True, 123, (1, 2, 3), 'Hello'}
+```
+
+要素にイミュータブル(変更可能)なオブジェクトを持たせることができません。
+
+```python
+s = {123, [1, 2, 3], "Hello"}
+print(s) # TypeError: unhashable type: 'list'
+
+s = {123, {'name': 'John', 'age': 36}, "Hello"}
+print(s) # TypeError: unhashable type: 'dict'
+```
+
+##### 集合の演算
+
+集合のため、和集合、積集合、差集合などを求めることができます。
+
+```python
+s1 = {"apple", "banana", "cherry"}
+s2 = {"apple", "mango", "pineapple"}
+
+# 和集合は A の要素と B の要素を結合したもの
+print(s1 | s2) # {'apple', 'banana', 'cherry', 'mango', 'pineapple'}
+print(s1.union(s2)) # {'apple', 'banana', 'cherry', 'mango', 'pineapple'}
+
+# 積集合は A かつ B の要素
+print(s1 & s2) # {'apple'}
+print(s1.intersection(s2)) # {'apple'}
+
+# 差集合は A かつ B でない要素
+print(s1 - s2) # {'banana', 'cherry'}
+print(s2 - s1) # {'mango', 'pineapple'}
+print(s1.difference(s2)) # {'banana', 'cherry'}
+print(s2.difference(s1)) # {'mango', 'pineapple'}
+
+# 対称差集合は A と B の和集合から A と B の積集合を除いた要素
+print(s1 ^ s2) # {'banana', 'cherry', 'mango', 'pineapple'}
+print(s1.symmetric_difference(s2)) # {'banana', 'cherry', 'mango', 'pineapple'}
+```
+
+##### 集合の関係
+
+集合の関係は `issubset()`, `issuperset()`, `isdisjoint()` で確認できます。
+
+```python
+s1 = {"apple", "banana", "cherry"}
+s2 = {"apple", "banana", "cherry", "orange"}
+
+# s1 は s2 のサブセット(部分集合)か …s1 の要素が全て s2 に含まれているか
+print(s1 <= s2) # False
+print(s1.issubset(s2)) # False
+
+# s2 は s1 のスーパーセット(上位集合)か …s2 の要素が全て s1 に含まれているか
+print(s2 >= s1) # True
+print(s2.issuperset(s1)) # True
+
+# s1 と s2 は要素は全て重複していないか
+print(s1.isdisjoint(s2)) # False # 重複しているため
+```
+
+集合の論理演算
+
+```python
+s1 = {0, 1, 2}
+s2 = {0, 1, 2, 3, 4}
+s3 = {2, 1, 0}
+
+# A と B は同じ集合か
+print(s1 == s2) # False
+print(s1 == s3) # True
+
+# 集合の中に指定の値が要素として含まれているか
+print(0 in s1) # True
+print(5 in s2) # False
+
+# 集合の中に指定の値が要素として含まれていないか
+print(0 not in s1) # False
+```
+
+真部分集合 …集合 A は 集合 B の部分集合で、かつ A と B は同じ集合ではない
+真部分集合は `<` で確認できます。
+
+```python
+s1 = {0, 1, 2}
+s2 = {0, 1, 2, 3, 4}
+
+print(s1 < s2) # True
+```
+
+素 …素とは集合 A と 集合 B のお互いの要素に重複が見られない状態のこと
+`isdisjoint()` で確認できます。
+
+```python
+s1 = {0, 1, 2}
+s2 = {3, 4, 5}
+
+print(s1.isdisjoint(s2)) # True
+```
+
+##### `set()`関数
+
+`set()` 関数は、リストやタプルなどのシーケンス型を集合型に変換します。
+
+```python
+l = [1, 2, 3, 4, 5]
+s = set(l)
+print(s) # {1, 2, 3, 4, 5}
+
+t = (1, 2, 3, 4, 5)
+s = set(t)
+print(s) # {1, 2, 3, 4, 5}
+
+d = {"name": "John", "age": 36, "city": "New York"}
+s = set(d)
+print(s) # {'name', 'age', 'city'}
+```
+
+また要素を持たない空集合は `set()` 関数で作成できます。
+
+```python
+s = set()
+print(s) # set()
+print(type(set())) # <class 'set'>
+print(type({})) # <class 'dict'>
+```
+
+`{}` としても dict 型となってしまいます。
+
+#### frozenset 型
+
+要素の追加や削除ができない集合型が frozenset 型です。
+
+```python
+fs = frozenset({"apple", "banana", "cherry"})
+print(fs) # frozenset({'apple', 'banana', 'cherry'})
+print(type(fs)) # <class 'frozenset'>
+
+fs.add("orange") # AttributeError: 'frozenset' object has no attribute 'add'
+fs.pop() # AttributeError: 'frozenset' object has no attribute 'pop'
+fs.clear() # AttributeError: 'frozenset' object has no attribute 'clear'
+```
+
+### バイナリ型
+
+バイナリ型は bytes 型, bytearray 型, memoryview 型です。
+
+```python
+b = b"Hello"
+ba = bytearray(b)
+mv = memoryview(b)
+print(type(b)) # <class 'bytes'>
+print(type(ba)) # <class 'bytearray'>
+print(type(mv)) # <class 'memoryview'>
+```
+
+### None 型
+
+None 型は None 型です。
+
+```python
+n = None
+print(type(n)) # <class 'NoneType'>
+```
+
+## 演算子
+
+### 算術演算子
+
+算術演算子は数値を演算するための演算子です。
+
+```python
+a = 10
+b = 3
+print(a + b) # 13 加算
+print(a - b) # 7 減算
+print(a * b) # 30 乗算
+print(a / b) # 3.3333333333333335 除算
+print(a % b) # 1 剰余
+print(a ** b) # 1000 べき乗
+print(a // b) # 3 整数除算(商の整数部分)
+```
+
+文字列の結合
+
+```python
+s1 = "Hello"
+s2 = "World"
+print(s1 + s2) # HelloWorld
+
+i = 456
+# print(s1 + i) # TypeError: can only concatenate str (not "int") to str
+print(s1 + str(i)) # Hello456
+```
+
+### 比較演算子
+
+比較演算子は数値比較するための演算子です。
+
+```python
+a = 10
+b = 20
+print(a == b) # False
+print(a != b) # True
+print(a > b) # False
+print(a < b) # True
+print(a >= b) # False
+print(a <= b) # True
+```
+
+### 論理演算子
+
+論理演算子は真偽値を演算するための演算子です。
+
+```python
+a = True
+b = False
+print(a and b) # False
+print(a or b) # True
+print(not a) # False
+print(not b) # True
+```
+
+### 代入演算子
+
+代入演算子は変数に値を代入するための演算子です。
+
+```python
+a = 10
+b = 20
+a += b # a = a + b
+print(a) # 30
+
+a -= b # a = a - b
+print(a) # 10
+
+a *= b # a = a * b
+print(a) # 200
+
+a /= b # a = a / b
+print(a) # 10.0
+
+a %= b # a = a % b
+print(a) # 10
+
+a **= b # a = a ** b
+print(a) # 100000000000000000000
+
+a //= b # a = a // b
+print(a) # 5
+
+a &= b # a = a & b
+print(a) # 0
+
+a |= b # a = a | b
+print(a) # 20
+
+a ^= b # a = a ^ b
+print(a) # 20
+
+a >>= b # a = a >> b
+print(a) # 0
+
+a <<= b # a = a << b
+print(a) # 20
+```
+
+### is ・ is not 演算子
+
+厳密な比較(オブジェクトの比較)を行う演算子です。
+
+#### is 演算子
+
+is 演算子は同じオブジェクトかどうかを確認する演算子です。先ほどまでの関係演算子よりも厳密な比較を行います。
+
+```python
+l1 = [1, 2, 3, 4, 5]
+l2 = [1, 2, 3, 4, 5]
+l3 = l1
+
+print("l1 == l2:", l1 == l2) # True
+print("l1 is l2:", l1 is l2) # False
+print("l1 == l3:", l1 == l3) # True
+print("l1 is l3:", l1 is l3) # True
+
+print(id(l1)) # 4306147328
+print(id(l2)) # 4306247168
+print(id(l3)) # 4306147328
+```
+
+#### is not 演算子
+
+is not 演算子は同じオブジェクトでないかを確認する演算子です。
+
+```python
+print("l1 is not l2:", l1 is not l2) # True
+print("l1 is not l3:", l1 is not l3) # False
+```
+
+### メンバー演算子
+
+メンバー演算子は指定された要素がシーケンス型に含まれているかを確認する演算子です。
+
+#### in 演算子
+
+in 演算子は指定された要素がシーケンス型に含まれているかを確認する演算子です。
+
+```python
+l = [1, 2, 3, 4, 5]
+print(1 in l) # True
+print(6 in l) # False
+
+s = "Hello"
+print("H" in s) # True
+print("h" in s) # False
+```
+
+#### not in 演算子
+
+not in 演算子は指定された要素がシーケンス型に含まれていないかを確認する演算子です。
+
+```python
+l = [1, 2, 3, 4, 5]
+print(1 not in l) # False
+print(6 not in l) # True
+
+s = "Hello"
+print("H" not in s) # False
+print("h" not in s) # True
+```
+
+### ビット演算子
+
+ビット演算子はビット演算するための演算子です。
+
+まず、2 進数の表記が以下になります。
+
+```python
+print(0b1010) # 10
+print(0b10100) # 20
+
+# または、10 進数を 2 進数に変換する bin() 関数を使用する
+print(bin(10)) # 0b1010
+print(bin(20)) # 0b10100
+
+# または、10 進数を 2 進数に変換する format() 関数を使用する
+print(format(10, "b")) # 1010
+print(format(20, "b")) # 10100
+```
+
+ビット演算子は以下になります。
+
+```python
+a = 10
+b = 20
+print(a & b) # 8
+print(a | b) # 22
+print(a ^ b) # 14
+```
+
+### ビットシフト演算子
+
+ビットシフト演算子はビットをシフトするための演算子です。
+
+```python
+a = 10
+print(a << 1) # 20
+print(a >> 1) # 5
+```
+
+## 条件分岐
+
+### `if` 文
+
+if 文は条件分岐を行うための文です。
+
+```python title="構文"
+if 条件式:
+    条件が真の時の処理
+```
+
+```python
+a = 10
+if a > 0:
+    print("a is positive")
+```
+
+### `if ~ else` 文
+
+`if ~ else` 文は条件分岐を行うための文です。
+
+```python title="構文"
+if 条件式:
+    条件が真の時の処理
+else:
+    条件が偽の時の処理
+```
+
+```python
+a = 10
+if a > 0:
+  print("a is positive")
+else:
+  print("a is negative")
+```
+
+:::note[インデントによるブロック表現]
+
+Python では処理ブロックをネストさせるのにインデントを使用します。
+そのため、インデントがされていない場合はエラーとなります。
+
+```python
+a = 10
+if a > 0:
+    print("a is positive")
+    # IndentationError: expected an indented block after 'if' statement on line 3
+else:
+    print("a is negative")
+```
+
+:::
+
+### `if ~ elif ~ else` 文
+
+`if ~ elif ~ else` 文は条件分岐を行うための文です。
+
+```python title="構文"
+if 条件式:
+    条件が真の時の処理
+elif 条件式:
+    "elif" 条件が真の時の処理
+else:
+    条件が偽の時の処理
+```
+
+```python
+a = 10
+if a > 0:
+    print("a is positive")
+elif a < 0:
+    print("a is negative")
+else:
+    print("a is zero")
+```
+
+### 複数の演算子を使った条件分岐
+
+複数の演算子を使った条件分岐は、`and` や `or` を使って複数の条件を組み合わせることができます。
+
+```python
+a = 10
+b = 20
+
+if a > 0 and b > 0:
+    print("a and b are positive")
+
+if a > 0 or b > 0:
+    print("a or b is positive")
+```
+
+and や or は `and` や `or` は `>` や `<` などの比較演算子よりも優先順位が落ちます。
+
+#### 優先順位
+
+以下は、Python における（括弧や関数呼び出しなどを除く）主要な演算子の優先順位を高い順に並べたものです。優先度は演算子で隣り合う値に対してどちらが結びつきが強いかの序列です。
+
+<Steps>
+
+1. **指数演算子**: `**`
+
+   ※ 右結合。例: `2 ** 3 ** 2` は `2 ** (3 ** 2)` と評価される
+
+2. **単項演算子**: 正・負（`+x`、`-x`）、ビット単位の否定（`~x`）
+
+3. **乗算／除算／床除算／剰余**: `*`, `/`, `//`, `%`
+
+4. **加算・減算**: `+`, `-`
+
+5. **シフト演算子**: `<<`, `>>`
+
+6. **ビット論理積**: `&`
+
+7. **ビット排他的論理和**: `^`
+
+8. **ビット論理和**: `|`
+
+9. **比較演算子**
+
+   - `<`, `<=`, `>`, `>=`, `==`, `!=`
+   - さらに、`in`, `not in`, `is`, `is not`  
+     ※ これらはすべて同じ優先順位で、比較チェーンとして使える（例: `a < b <= c`）
+
+10. **論理否定演算子**
+
+    - `not`  
+      ※ 単項演算子なので、比較演算子より後に評価される
+
+11. **論理積演算子**
+
+    - `and`
+
+12. **論理和演算子**
+    - `or`
+
+</Steps>
+
+※ なお、括弧 `()` を用いると上記の優先順位を無視して明示的に評価順序を指定できます。
+
+---
+
+##### 解説例
+
+次の例では、優先順位がどのように働くかを確認してください。
+
+```python
+a = 2 ** 3 ** 2      # 2 ** (3 ** 2) → 2 ** 9 = 512
+
+b = -3 + 4 * 5       # 乗算の方が加算より優先される → -3 + (4 * 5) = 17
+
+c = 10 < 20 == 20    # 10 < 20 と 20 == 20 が評価され、チェーン検査される → True
+
+d = not True and False or True
+# 評価順序:
+# 1. not True        → False
+# 2. (False and False) → False
+# 3. (False or True)   → True
+print(a, b, c, d)
+```
+
+この例から、
+
+- 算術演算子（`**`, `*`, `+`, など）は論理演算子より先に評価され、
+- 比較演算子（`<`, `==`, `in` など）はまた、それらの単項・算術演算子より低い優先順位にあり、
+- そして論理演算子は `not` → `and` → `or` の順序で評価されることがわかります。
+
+Python の公式ドキュメントにも同様の優先順位表が記されていますので、詳細はそちらも参考にしてください。
+
+```python
+#              True
+#      ┌────────┴───────┐
+#     True            False
+#  ┌───┴────┐   ┌───────┴──────┐
+if 1 + 1 == 2 or False and True:
+    print("True")
+
+#                       True
+#                ┌───────┴──────┐
+#              False          True
+#         ┌──────┴─────┐
+#       False         True
+#  ┌──────┴──────┐
+if 1 + 1 * 3 >= 5 and True or True:
+    print("True")
+```
+
+```python
+# 優先順位を試した fizzbazz プログラム
+
+for i in range(1, 101):
+    # 3 で割り切れる場合
+    if i % 3 == 0:
+        print("fizz: ", i)
+    # 5 で割り切れる場合
+    elif i % 5 == 0:
+        print("buzz: ", i)
+    # 3 と 5 で割り切れる場合
+    elif i % 3 == 0 and i % 5 == 0:
+        print("fizzbuzz: ", i)
+    # 4 または、5 で割り切れるかつ 3 で割り切れない場合(要は 4 で割り切れる数字)
+    elif i % 4 == 0 or i % 5 == 0 and i % 3 != 0:
+        print("fizzbuzz 4 or 5 but not 3: ", i)
+    else:
+        print("other ******************: ", i)
+```
+
+### match 文
+
+### pass
+
+### 三項演算子
+
+三項演算子は真偽値を演算するための演算子です。
+
+```python
+a = 10
+b = 20
+print(a if a > b else b) # 20
+```
+
+## メソッド
+
+### メソッドチェーン
+
+メソッドチェーンはメソッドをチェーンするための演算子です。
+
+```python
+s = "Hello"
+print(s.upper().lower().capitalize()) # hello
+```

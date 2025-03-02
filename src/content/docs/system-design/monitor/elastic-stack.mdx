@@ -1,0 +1,37 @@
+---
+title: Elastic Stack
+description: Elastic Stack
+tags:
+  - "system-design"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: Elastic Stack
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 1
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps, FileTree } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import Table from "@components/Table.astro";
+
+**Elastic Stack**（エラスティックスタック）は、主にログデータの収集、解析、可視化を目的としたオープンソースのソフトウェア群で、以前は **ELK Stack** として知られていました。以下が主な構成要素とその役割です。
+
+- **Elasticsearch**  
+  分散型の検索・分析エンジンであり、大量のデータをリアルタイムで格納、検索、解析することが可能です。
+
+- **Logstash**  
+  各種データソースからログやイベントデータを収集し、整形・フィルタリングして Elasticsearch に送信するデータパイプラインツールです。
+
+- **Kibana**  
+  Elasticsearch に格納されたデータをグラフ、チャート、ダッシュボードなどで可視化し、直感的な分析を支援する UI ツールです。
+
+- **Beats**  
+  軽量なデータシッパーで、各種サーバーやエンドポイントから直接データを収集して Elasticsearch または Logstash に送る役割を担います。
+
+---
+
+これらのコンポーネントが連携することで、システムやアプリケーションから生成される膨大なログやイベントデータを一元的に管理し、リアルタイムでのモニタリング、トラブルシューティング、セキュリティ監視などに活用できます。Elastic Stack は、柔軟なスケーリングや多様なプラグインの利用が可能なため、幅広いユースケースに対応できる点が大きな魅力です。

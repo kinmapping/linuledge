@@ -1,0 +1,146 @@
+---
+title: 環境構築
+description: 環境構築
+tags:
+  - "Python"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: 環境構築
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 11
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+## 環境構築
+
+### 環境構築の方法
+
+Google Colab を使用する
+
+### Google Colab の特徴
+
+- ブラウザ上で Python を実行できる
+- 無料で使用できる
+- データ分析や機械学習の実行に最適
+
+1. Docker を使用しない環境構築
+1. Docker を使用する環境構築
+
+## Docker を使用しない環境構築
+
+<Tabs syncKey="environment">
+
+<TabItem  label="Windows">
+
+Anaconda を使用する
+
+1. システム環境変数の編集 >
+1. 環境変数 > 新規 > 変数名:PYTHONPATH 変数値:Anaconda のインストールパス
+
+Jubyter lab を使用する
+
+</TabItem>
+
+<TabItem label="Mac">
+
+すでに python が実装されているかを確認する
+python2 から python3 へのバージョンがアップされているかを確認
+
+```bash
+python --version
+
+python2 --version
+python3 --version
+# これでなければ、python3をインストールしていく
+```
+
+python3 が実装されているかを確認
+
+`/Library/Developer/CommandLineTools/usr/bin` にインストールする
+デベロッッパーツールは `/Library/Developer/CommandLineTools` を削除することでアンインストールになる
+
+**コマンドラインデベロッパーツールのインストール後**
+
+pip3 (python のパッケージ管理ツール) のコマンドが使えるようになる
+
+</TabItem>
+
+<TabItem label="Google Colab">
+
+<LinkPreview url="https://colab.research.google.com/" />
+
+</TabItem>
+
+<TabItem label="pyenv">
+
+<LinkPreview url="https://github.com/pyenv/pyenv" />
+
+`anyenv`を使用して`pyenv`をインストールし、その後で Python をインストールする手順を以下に示します。
+
+1. **anyenv を利用する(anyenv のインストール)**
+
+   `anyenv`をインストールします。`anyenv`は複数の**env**ツール（`rbenv`, `pyenv`, `nodenv`など）を一元管理するためのツールです。
+
+   ```bash frame=none
+   # anyenvのインストール
+   git clone <https://github.com/anyenv/anyenv> ~/.anyenv
+   echo 'export PATH="$HOME/.anyenv/bin:$PATH"' >> ~/.bashrc
+   echo 'eval "$(anyenv init -)"' >> ~/.bashrc
+   source ~/.bashrc
+   ```
+
+1. **anyenv-update プラグインのインストール**
+
+   `anyenv` のプラグインである `anyenv-update` をインストールします。これにより、インストールされている env ツールを簡単にアップデートできます。
+
+   ```bash frame=none
+   mkdir -p $(anyenv root)/plugins
+   git clone https://github.com/znz/anyenv-update.git $(anyenv root)/plugins/anyenv-update
+   ```
+
+1. **pyenv のインストール**
+
+   anyenv を使用して pyenv をインストールします。
+
+   ```bash frame=none
+   anyenv install pyenv
+   exec $SHELL -l
+   ```
+
+1. **pyenv による Python のインストール**
+
+   pyenv を使用して Python をインストールします。
+
+   ```bash frame=none
+   # インストールできる python バージョンを確認
+   pyenv install --list
+   pyenv install 3.9.5
+
+   # インストールした python のバージョンを確認
+   pyenv versions
+
+   # デフォルトの Python バージョンを設定
+
+   pyenv global 3.11.4
+
+   # shell セッションの python バージョンを確認
+   python --version
+
+
+   # プロジェクトごとにバージョン管理
+   pyenv local 2.7.18
+   ```
+
+</TabItem>
+
+</Tabs>
+
+## Docker を使用する環境構築

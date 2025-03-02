@@ -71,6 +71,12 @@ git checkout -b local_branch_name origin/remote_branch_name
 remote_name=origin
 remote_url=https://github.com/example/repo.git
 
+# リモート URL の設定を SSH 接続にする場合は
+ssh_user=git
+host=github.com
+github_id=example
+remote_url=$ssh_user@$host:$github_id/repo.git
+
 # リモートリポジトリの登録
 git remote add $remote_name $remote_url
 

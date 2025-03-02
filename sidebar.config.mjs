@@ -47,6 +47,11 @@ export default [
                 collapsed: true,
                 autogenerate: { directory: 'system-design/ai-driven-development' },
             },
+            {
+                label: 'セキュリティ',
+                collapsed: true,
+                autogenerate: { directory: 'system-design/security' },
+            },
         ],
     },
     {
@@ -79,6 +84,22 @@ export default [
                 collapsed: true,
                 autogenerate: { directory: 'golang/cmd' },
             },
+        ],
+    },
+    {
+        label: 'Python',
+        collapsed: true,
+        items: [
+            {
+                label: 'Pythonの基礎',
+                collapsed: true,
+                autogenerate: { directory: 'python/base' },
+            },
+            // {
+            //     label: 'Pythonコマンド',
+            //     collapsed: true,
+            //     autogenerate: { directory: 'python/cmd' },
+            // },
         ],
     },
     {

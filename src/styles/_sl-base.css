@@ -127,4 +127,21 @@ HTML の基本要素（例：見出し、段落、リスト、コードブロッ
         background-color: var(--color-gray-6);
         @apply shadow-s-depressed p-3.5;
     }
+
+    .sl-markdown-content .footnotes {
+        @apply mt-8 pt-8;
+        &::before {
+            content: "脚注";
+            @apply block w-full border-t border-dashed;
+        }
+        & ol {
+            @apply text-base;
+        }
+
+        & li {
+            & p {
+                @apply mb-0;
+            }
+        }
+    }
 }

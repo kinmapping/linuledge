@@ -14,15 +14,15 @@ sidebar:
   #     variant: tip
 ---
 
-import { SimpleTable } from "@components/SimpleTable.tsx";
+import SimpleTable from "@components/SimpleTable.tsx";
 
 ## 概要
 
 `<SimpleTable>` コンポーネントは表をスタイルして、シンプルな表を利用した図形を書くのに適しています。
 フレキシブルな colspan と rowspan を使用してせるセル結合の表現も行えます。
 
-```astro
-import { SimpleTable } from "@components/SimpleTable.tsx";
+```mdx
+import SimpleTable from "@components/SimpleTable.tsx";
 <SimpleTable
   data={{
     thead: [],
@@ -35,6 +35,7 @@ import { SimpleTable } from "@components/SimpleTable.tsx";
   isRowFirstHeader={true}
   colgroup={[1, 4, 1]}
   thStyle={{ textAlign: "center", width: "auto", border: "none", padding: "0 0.5rem" }}
+
 />
 ```
 
