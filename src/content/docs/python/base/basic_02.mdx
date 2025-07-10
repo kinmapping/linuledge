@@ -1,0 +1,827 @@
+---
+title: 基本(制御構文)
+description: 基本(制御構文)
+tags:
+  - "Python"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: 基本(制御構文)
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 20
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+一般的に、プログラムの構造は、順次、分岐、繰り返しで構成されています。
+
+## 条件分岐
+
+### if 文
+
+インデントで、条件式が真の場合の処理を指定します。インデントは原則、4 つのスペースです。
+
+```python
+if 条件式:
+    処理
+
+if 条件式:
+    処理
+else:
+    処理
+```
+
+からのブロックは pass 命令で表します。
+
+```python
+if 条件式:
+    # 空ブロックのつもりだが、これだと、"IndentationError: unexpected indent" というエラーが発生する
+
+# 開発中などで、空の処理を安全に利用したい場合は pass 命令を使用します。
+if 条件式:
+    pass
+else:
+    pass
+```
+
+pass は何もしないことを意味します。開発中であると以下のようにコメントを入れることもあるでしょう。
+
+```python
+if 条件式:
+    '''
+    開発中です。真の時は、ここに処理を記述します。
+    '''
+    pass
+else:
+    # 開発中
+    pass
+```
+
+#### if elif else 文
+
+elif は else if の略です。複数の条件がある場合はこのように記述します。
+
+```python
+if 条件式:
+    処理
+elif 条件式:
+    処理
+else:
+    処理
+```
+
+#### 条件式を指定する Tips
+
+<Steps>
+1.  **条件式を `()` でくくる**
+
+    条件式は、`()` でくくることができます。
+    `()` 内では、改行も可能なため、複雑な条件式の場合に利用できる書き方です。
+
+    ```python
+    if (hoge == 100
+          and huga == 200
+          and piyo == 500):
+        print(a)
+    ```
+
+2. **bool 型の変数を `==` で比較しない**
+
+   ```python
+   flag = True
+   if flag == True:
+       print("flag は True です。")
+   ```
+
+   flag は bool 型の変数で、それ自体が True か False であるため、`== True` という比較は不要です。
+
+   ```python
+   flag = True
+   if flag:
+       print("flag は True です。")
+   ```
+
+   が正しいでしょう。
+
+3. **条件式からはできるだけ、否定を取り除く**
+
+   論理演算子は複合的な条件を表すのに欠かせないが、時として、思わぬバグの温床ともなります。
+   特に、「否定 + 論理演算子」の組み合わせは一般的に混乱の元となうので肯定表現に置き換えましょう。
+
+   ```python
+   if not flag and not flag2:
+       print("flag と flag2 は False です。")
+   ```
+
+   というコードは、
+
+   ```python
+   if not (flag or flag2):
+       print("flag と flag2 は False です。")
+   ```
+
+   と書くべきです。
+   さらに、
+
+   ```python
+   if flag or flag2:
+       pass
+   else:
+       print("flag と flag2 は False です。")
+   ```
+
+   と書くべきです。if ブロックの省略ができないため、冗長に感じますが、見た目の可読性は肯定表現の方が読みやすいでしょう。
+
+</Steps>
+
+### match..case 文(Python 3.10 以降)
+
+match..case 文は、制御したい値に対して、等価のパターンを指定して、処理を記述します。
+
+if 文では、
+
+```python
+color = "red"
+if color == "red":
+    print("赤色です。止まってください。")
+elif color == "yellow":
+    print("黄色です。減速してください。")
+elif color == "green":
+    print("緑色です。進んでください。")
+else:
+    print("その他の色です。止まってください。")
+```
+
+のように elif で条件を追加していきます。しかし、条件がすべて等価式であるなら match...case 文を利用できます。
+
+```python
+color = "red"
+match color:
+    case "red":
+        print("赤色です。止まってください。")
+    case "yellow":
+        print("黄色です。減速してください。")
+    case "green":
+        print("緑色です。進んでください。")
+    case _:
+        print("その他の色です。止まってください。")
+```
+
+最後の `case _:` は、パターンが一致しなかった場合の処理です。
+デフォルトのブロックで、パターンにマッチしなかった時の止めの処理のため、省略はしないようにしましょう。
+
+また、match..case 文は、if 文よりも高速に動作し、等価条件式を行なっているということで可読性が上がります。
+
+#### パターンの種類
+
+パターンには、以下のようなものがあります。
+
+<Table
+  caption=""
+  colWidth={["9rem"]}
+  columns={["パターン", "説明"]}
+  data={[
+    ["リテラル", ["リテラル(値)との一致を判定。"].join("<br/>")],
+    ["ワイルドカード", ["すべての値とマッチ `_` を使用。"].join("<br/>")],
+    ["キャプチャ", ["マッチした値を指定の変数に代入"].join("<br/>")],
+    ["値", ["オブジェクトの属性 `obj.attr` とのマッチを判定"].join("<br/>")],
+    ["グループ", ["複数のパターンを (...) で束ねる"].join("<br/>")],
+    ["シーケンス", ["シーケンスとのマッチを判定"].join("<br/>")],
+    ["マッピング", ["辞書との比較を判定"].join("<br/>")],
+    ["クラス", ["特定の方であるか、あるいは、その属性が指定地にマッチするか"].join("<br/>")],
+    ["or", ["`|` 区切りの複数パターンのいずれかとマッチするかを判定"].join("<br/>")],
+    ["as", ["マッチした値を as 指定された変数に代入"].join("<br/>")],
+  ]}
+/>
+
+<Tabs>
+  <TabItem label="or">
+
+複数のパターンを `|` で連結することで、いずれかのパターンとマッチするかを判定します。
+
+```python
+drink = 'ビール'
+match drink:
+    case "ビール" | "日本酒" | "ワイン":
+        print("醸造酒です。")
+    case "ウィスキー" | "ブランデー" | "ジン":
+        print("蒸留酒です。")
+    case _:
+        print("その他の飲み物です。")
+# 醸造酒です。
+```
+
+  </TabItem>
+
+  <TabItem label="シーケンス">
+
+シーケンスとは、リストのような順序のある値の並びを言います.
+シーケンスパターンは、シーケンスの長さと値を加味したマッチングを行います。
+
+```python
+lang = ['Python', 'Guido van Rossum', 1991]
+match lang:
+    case ['JavaScript']: # ①
+        print("1個のシーケンス: JavaScript")
+    case ['Python']: # ②
+        print("1個のシーケンス: Python")
+    case ['Python', 'Guido van Rossum']: # ③
+        print("2個のシーケンス")
+    case ['Python', 'Guido van Rossum', 1991]: # ④
+        print("3個のシーケンス")
+    case _:
+        print("その他のシーケンスです。")
+# 3個のシーケンス
+```
+
+① は、長さも値も一致しません。
+②、③ は、一致する値があるものの長さが一致しません。
+④ は、長さ、値、順番が一致します。そのため、4 つ目のパターンがマッチします。
+
+  </TabItem>
+
+  <TabItem label="ワイルドカード">
+
+ワイルドカードパターンは `_` を使用します。
+
+```python
+lang = ['Python', 'Guido van Rossum', 1991]
+match lang:
+    case ['Python', _, _]:
+        print("Python です。")
+    case _:
+        print("その他のシーケンスです。")
+# Python です。
+
+# *_ で実行することもできる
+match lang:
+    case ['Python', *_]:
+        print("Python です。")
+    case _:
+        print("その他のシーケンスです。")
+# Python です。
+```
+
+  </TabItem>
+
+<TabItem label="キャプチャ">
+
+任意の要素にマッチするだけでなく、マッチした要素を変数に代入(キャプチャ)して、ブロック内で参照したいこともあります。
+そんな場合に、利用するのがキャプチャパターンです。これまでリテラルを示していた部分に変数を指定します。
+
+```python
+lang = ['Python', 'Guido van Rossum', 1991]
+match lang:
+    case ['Ruby', name, year]:
+        print(f"Ruby の作者は {name} です。")
+        print(f"Ruby の発表年は {year} 年です。")
+    case ['Python', name, _]:
+        print(f"Python の作者は {name} です。")
+    case _:
+        print("その他のシーケンスです。")
+# Python の作者は Guido van Rossum です
+```
+
+同じく `*` を付与することで、任意個数の要素をまとめてキャプチャすることもできます。
+
+```python
+lang = ['Python', 'Guido van Rossum', 1991, '3.13']
+match lang:
+    case ['Python', *info, version]:
+        print(f"Python は {info[0]} によって {info[1]} 年に作られました。最新バージョンは{version}です。")
+    case _:
+        print("その他のシーケンスです。")
+# Python は Guido van Rossum によって 1991 年に作られました。最新バージョンは3.13です。
+```
+
+</TabItem>
+
+<TabItem label="グループ">
+
+(...) で、複数のサブパターン(パターン内のパターン)を束ねることができます。
+
+```python
+lang = ['Python', 'Guido van Rossum', 1991]
+match lang:
+    case [('Python'| 'Ruby'), author, created]: # ①
+        print(f"{author}によって{created}年に作られました。")
+    case [('Java'|'JavaScript'), company]: # ②
+        print(f"{company}が開発しました。")
+    case _:
+        print("その他のシーケンスです。")
+# Guido van Rossum によって 1991 年に作られました。
+```
+
+① は、Python か Ruby のどちらかとマッチか判定が入り、マッチした場合は、その値をキャプチャします
+
+</TabItem>
+
+<TabItem label="as">
+
+グループパターンでマッチした際に、`as 変数`でキャプチャした値を変数に代入することができます。
+
+```python
+lang = ['Python', 'Guido van Rossum', 1991]
+match lang:
+    case [('Python'| 'Ruby') as lang, author, created]: # ①
+        print(f"{lang} は {author} によって {created} 年に作られました。")
+    case [('Java'|'JavaScript') as lang, company]: # ②
+        print(f"{lang}は{company}が開発しました。")
+    case _:
+        print("その他のシーケンスです。")
+# Python は Guido van Rossumによって1991年に作られました。
+```
+
+</TabItem>
+
+<TabItem label="クラス">
+
+値そのものではなく、型によって処理を分岐することもできます。
+
+```python
+obj = -123
+match obj:
+    case int():
+        print(f"{obj}は整数です。")
+    case float():
+        print(f"{obj}は浮動小数点数です。")
+    case _:
+        print("その他のオブジェクトです。")
+```
+
+</TabItem>
+</Tabs>
+
+#### ガード条件
+
+case ブロックの後に、`if 条件式`を記述することで、ガード条件を指定することができます。
+
+```python
+obj = -123
+match obj:
+    case int() if obj > 15:
+        print("15以上の数値です。")
+    case int():
+        print("数値です。")
+    case str() if len(obj) < 10:
+        print("10文字未満の文字列です。")
+    case _:
+        print("意図しない型です。")
+# 数値です。
+```
+
+## 繰り返し処理
+
+### while 文
+
+while 文は、条件式が真の間、ブロック内の処理を繰り返します。無限ループにならないよう注意しなければなりません。
+
+```python
+while 条件式:
+    処理(条件式が True である間、繰り返し実行される)
+
+while 条件式:
+    処理(条件式が True である間、繰り返し実行される)
+else:
+    処理(条件式が False になった時に実行される)
+```
+
+例えば、
+
+```python
+i = 1
+while i < 6:
+    print(f'{i}番目のループです。')
+    i += 1
+# 1番目のループです。
+# 2番目のループです。
+# 3番目のループです。
+# 4番目のループです。
+# 5番目のループです。
+
+i = 1
+while i < 6:
+    print(f'{i}番目のループです。')
+    i += 1
+else:
+    print('6番目のループです。')
+# 1番目のループです。
+# 2番目のループです。
+# 3番目のループです。
+# 4番目のループです。
+# 5番目のループです。
+# 6番目のループです。
+```
+
+:::caution[無限ループに注意]
+
+無限ループとは、永遠に終了しない、終了条件が False にならないループのことです。
+
+```python
+while True:
+    print('無限ループです。')
+```
+
+このような無限ループは、コンピュータへ負荷を与え、コンピュータそのものをフリーズさせる原因にもなります。
+繰り返し処理を記述する際には、条件の確認をしてから実行することを忘れないようにしましょう。
+:::
+
+### for 文
+
+for 文は、シーケンス(リスト、タプル、文字列など)の要素を順番に取り出して、ブロック内の処理を繰り返します。
+
+```python
+for 変数 in シーケンス:
+    処理
+```
+
+```python
+data = ['うめ', 'さくら', 'もも']
+for fruit in data:
+    print(fruit)
+# うめ
+# さくら
+# もも
+
+data = "こんにちは"
+for char in data:
+    print(char)
+# こ
+# ん
+# に
+# ち
+# は
+```
+
+文字列もイテラブル(列挙可能な型)であるため、for 文で要素を取り出すことができます。
+
+#### for 文 + range 関数
+
+range 関数は、指定した範囲の整数を順番に生成するジェネレータを返します。
+
+```python
+for i in range(5):
+    print(i)
+# 0
+# 1
+# 2
+# 3
+# 4
+
+for i in range(1, 6):
+    print(i)
+# 1
+# 2
+# 3
+# 4
+# 5
+```
+
+range 関数は、開始値と終了値を指定することで、指定した範囲の整数を順番に生成することができます。
+第 3 引数には、ステップを指定することができます。
+
+```python
+list = list(range(0, 10, 2))
+print(list)
+# [0, 2, 4, 6, 8]
+```
+
+ステップの指定に、負の値を指定することもできます。逆順の整数を生成することができます。
+
+```python
+list = list(range(10, 0, -2))
+print(list)
+# [10, 8, 6, 4, 2]
+```
+
+:::tip[リスト内包表記]
+
+既存のリストから新たなリストを生成する際に簡単に書ける表現手法です。
+
+`[式 for 変数 in シーケンス]`
+
+```python
+data = [15, 43, 7, 59, 98]
+data2 = [i * 2 for i in data]
+print(data2)
+# [30, 86, 14, 118, 196]
+```
+
+さらに、内包表記は式であるため戻り値から条件式、関数へと繋げることもできます。
+
+```python
+data = [15, 43, 7, 59, 98]
+data2 = sum([i * 2 for i in data if i > 20])
+print(data2)
+# 400
+```
+
+:::
+
+## ループの制御
+
+### break 文
+
+break 文は、ループを途中で抜けるために使用します。
+
+```python
+sum = 0
+
+# 1 から 100 までの整数を足し合わせる
+for i in range(1, 101):
+    sum += i
+    if sum > 1000:
+        print(i)
+        break
+print(sum)
+# 45
+# 1035
+```
+
+#### do..while 文はありません
+
+do..while 文は、ループを実行した後に条件式を評価するループです。つまり、最初から条件が False であっても最低 1 回はループを実行します。しかし、Python には do..while 文はありません。同様の操作を行うには、以下のようにします。
+
+```python
+i = 1
+while True:
+    print(i)
+    i += 1
+    if i > 10:
+        break
+# 1
+# 2
+```
+
+ポイントとしては、`while True` の部分です。これは、条件式が常に True であるため、ループを実行します。
+そのため、最低 1 回はループを実行し、正しい条件であれば、無限ループを起こさず、break 文でループを抜けることができます。
+
+### continue 文
+
+continue 文は、ループの先頭に戻り、次のループを実行します。
+
+```python
+sum = 0
+for i in range(1, 101):
+    if i % 2 == 0:
+        continue
+    sum += i
+print(sum)
+# 2500
+```
+
+### while-else、for-else
+
+while 文、for 文の後に、`else` を記述することで、ループが正常に終了した場合に実行されるブロックを記述することができます。
+break 文でループを抜けた場合は、else ブロックは実行されません。
+
+```python
+i = 1
+while i < 6:
+    print(f'{i}番目のループです。')
+    i += 1
+else:
+    print('-----')
+    print('6番目のループです。')
+# 1番目のループです。
+# 2番目のループです。
+# 3番目のループです。
+# 4番目のループです。
+# 5番目のループです。
+# -----
+# 6番目のループです。
+
+i = 1
+while i < 6:
+    print(f'{i}番目のループです。')
+    i += 1
+    if i == 3:
+        break
+else:
+    print('-----')
+    print('6番目のループです。')
+# 1番目のループです。
+# 2番目のループです。
+```
+
+```python
+# 正常に完了する例
+for i in range(3):
+    print(f"ループ {i}")
+else:
+    print("ループが正常に完了しました")
+# 出力:
+# ループ 0
+# ループ 1
+# ループ 2
+# ループが正常に完了しました
+
+# breakで中断される例
+for i in range(5):
+    if i == 3:
+        break
+    print(f"ループ {i}")
+else:
+    print("ループが正常に完了しました")
+# 出力:
+# ループ 0
+# ループ 1
+# ループ 2
+# (elseブロックは実行されない)
+
+# 実用的な例：リスト内の要素を検索
+numbers = [1, 3, 5, 7, 9]
+search_value = 4
+
+for num in numbers:
+    if num == search_value:
+        print(f"{search_value} が見つかりました")
+        break
+else:
+    print(f"{search_value} は見つかりませんでした")
+# 出力: 4 は見つかりませんでした
+```
+
+### 入れ子のループを中断/スキップする
+
+九九の表を出力する例です。
+
+```python
+for i in range(1, 10):
+  for j in range(1, 10):
+    result = i * j
+    if result > 50:
+      break
+    print(result, end=' ')
+
+  print() # 改行
+
+# 1 2 3 4 5 6 7 8 9
+# 2 4 6 8 10 12 14 16 18
+# 3 6 9 12 15 18 21 24 27
+# 4 8 12 16 20 24 28 32 36
+# 5 10 15 20 25 30 35 40 45
+# 6 12 18 24 30 36 42 48
+# 7 14 21 28 35 42 49
+# 8 16 24 32 40 48
+# 9 18 27 36 45
+```
+
+変数 result が 50 を超えたところで、break 文で外側のループを抜けることができます。
+これによって内側のループを脱出するので、結果として、50 以下である九九表が出力されます。
+つまり、内側のループは break 文で脱出しますが、外側のループは続行して最後まで実行しています。
+
+内側の条件で break を実行し、外側のループも止めるには、`continue` 文を使用します。
+
+```python
+for i in range(1, 10):
+  for j in range(1, 10):
+    result = i * j
+    if result > 50:
+      break
+    print(result, end=' ')
+    # 内側のループを正常終了したら、次の周回へ
+  else:
+    print('-----')
+    continue
+  # 内側のループが break で脱出したら、外側のループも脱出する
+  print('******')
+  break
+
+# 1 2 3 4 5 6 7 8 9 -----
+# 2 4 6 8 10 12 14 16 18 -----
+# 3 6 9 12 15 18 21 24 27 -----
+# 4 8 12 16 20 24 28 32 36 -----
+# 5 10 15 20 25 30 35 40 45 -----
+# 6 12 18 24 30 36 42 48 ******
+```
+
+#### フラグによる脱出
+
+else のルールを十分に理解していなければならないという意味で可読性に欠けます。
+そこで、フラグ変数を利用した脱出の例も紹介します。
+
+```python
+flag = False
+
+for i in range(1, 10):
+  for j in range(1, 10):
+    result = i * j
+    if result > 50:
+      flag = True
+      break
+    print(result, end=' ')
+  print()
+
+  if flag:
+    break
+```
+
+## 例外処理
+
+エラーを回避するための例外処理を紹介します。
+
+### try-except 文
+
+```python
+try:
+  # 正常に実行される処理
+except 例外クラス as 変数:
+  # 例外が発生した場合の処理
+```
+
+```python
+try:
+  # 正常に実行される処理
+except 例外クラス as 変数:
+  # 例外が発生した場合の処理
+else:
+  # 正常に実行された場合の処理
+finally:
+  # 例外が発生した場合でも実行される処理
+```
+
+#### else 句の用途
+
+`else` 句は、`try` ブロックが正常に完了した場合（例外が発生しなかった場合）にのみ実行されます。
+
+```python
+try:
+    result = 10 / 2
+    print(f"計算結果: {result}")
+except ZeroDivisionError:
+    print("ゼロ除算エラーが発生しました")
+else:
+    print("計算が正常に完了しました")
+# 出力:
+# 計算結果: 5.0
+# 計算が正常に完了しました
+
+try:
+    result = 10 / 0
+    print(f"計算結果: {result}")
+except ZeroDivisionError:
+    print("ゼロ除算エラーが発生しました")
+else:
+    print("計算が正常に完了しました")
+# 出力:
+# ゼロ除算エラーが発生しました
+# (else句は実行されない)
+```
+
+#### finally 句の用途
+
+`finally` 句は、例外の有無に関係なく、必ず実行される処理を記述します。主にリソースのクリーンアップ（ファイルのクローズ、データベース接続の切断など）に使用されます。
+
+```python
+try:
+    file = open("test.txt", "r")
+    content = file.read()
+    print(content)
+except FileNotFoundError:
+    print("ファイルが見つかりません")
+finally:
+    file.close()  # 必ずファイルをクローズ
+    print("ファイルをクローズしました")
+```
+
+#### 実行順序
+
+1. `try` ブロックを実行
+2. 例外が発生した場合：`except` ブロックを実行
+3. 例外が発生しなかった場合：`else` ブロックを実行
+4. 最後に必ず `finally` ブロックを実行
+
+```python
+def divide_numbers(a, b):
+    try:
+        result = a / b
+        print(f"計算結果: {result}")
+    except ZeroDivisionError:
+        print("ゼロ除算エラー")
+    except TypeError:
+        print("型エラー")
+    else:
+        print("正常に計算完了")
+    finally:
+        print("処理終了")
+
+# 正常な場合
+divide_numbers(10, 2)
+# 出力:
+# 計算結果: 5.0
+# 正常に計算完了
+# 処理終了
+
+# 例外が発生する場合
+divide_numbers(10, 0)
+# 出力:
+# ゼロ除算エラー
+# 処理終了
+```

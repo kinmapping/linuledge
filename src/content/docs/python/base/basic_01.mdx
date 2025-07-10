@@ -152,7 +152,68 @@ False
 
 :::
 
-:::note[変数が格納しているのはメモリのアドレス]
+### より良い識別子のためのルール
+
+命名規則ではないが、以下の点を考慮して命名をするとより良い識別子になります。
+
+1. 名前からデータの内容を類推できる
+1. 長すぎない、短すぎない
+1. ローマ字での命名は避ける
+1. 見た目に紛らわしくない
+1. 記法を統一する
+1. 先頭のアンダースコア`_`は、特殊な変数を表す
+
+:::note[先頭のアンダースコア`_`は、特殊な変数を表す]
+例えば、`__名前__` の形式の識別子がシステムで予約されています。
+
+<Table
+  caption=""
+  colWidth={["12rem"]}
+  columns={["名前", "説明"]}
+  data={[
+    ["`__name__`", ["現在のモジュール名を取得する"].join("<br/>")],
+    ["`__doc__`", ["現在のモジュールのドキュメントを取得する"].join("<br/>")],
+    ["`__package__`", ["現在のモジュールのパッケージ名を取得する"].join("<br/>")],
+    ["`__annotations__`", ["現在のモジュールのアノテーションを取得する"].join("<br/>")],
+    ["`__builtins__`", ["現在のモジュールのビルトイン関数を取得する"].join("<br/>")],
+    ["`__file__`", ["現在のモジュールのファイル名を取得する"].join("<br/>")],
+    ["`__cached__`", ["現在のモジュールのキャッシュファイル名を取得する"].join("<br/>")],
+    ["`__loader__`", ["現在のモジュールのローダーを取得する"].join("<br/>")],
+    ["`__spec__`", ["現在のモジュールの仕様を取得する"].join("<br/>")],
+    ["`__name__`", ["現在のモジュール名を取得する"].join("<br/>")],
+    ["default", ["値が設定されなかった場合の既定値"].join("<br/>")],
+  ]}
+/>
+
+```python
+print(__name__)
+```
+
+こちらを実行すると、
+
+```bash frame=none
+__main__
+```
+
+となります。これは、現在のモジュールがメインのモジュール（直接実行されたファイル）であることを示しています。
+
+他の特殊な識別子も確認してみましょう：
+
+```python
+# モジュールのドキュメント文字列を取得
+print(__doc__)
+
+# モジュールのファイルパスを取得
+print(__file__)
+
+# モジュールのパッケージ名を取得
+print(__package__)
+```
+
+これらの特殊な識別子は、Python の内部で自動的に設定されるため、通常の変数名として使用することは避けるべきです。
+:::
+
+### 変数が格納しているのはメモリのアドレス
 
 変数はデータを格納する箱のようなものと例えられますが実際には違います。どちらかというとオブジェクトと呼ばれる、変数に格納されるための値(文字列、数値などのリテラル)がメモリ上に存在していて、そのメモリのアドレスを参照していると考えた方が良いです。
 
@@ -182,7 +243,56 @@ print(id(a)) # 4359022696
 
 </Steps>
 
-:::
+### 変数の破棄
+
+変数は、オブジェクトを参照しているため、オブジェクトが破棄されると変数も破棄されます。
+
+```python
+a = 10
+print(a)
+del a
+print(a)
+```
+
+こちらを実行すると、
+
+```bash frame=none
+10
+NameError: name 'a' is not defined
+```
+
+このように、変数が破棄されると、その変数は存在しなくなります。
+
+### 定数
+
+変数は、再代入が可能な箱として捉えると、定数は格納したら内容を変更できない箱として捉えることができます。
+例えば、定数を使わない例として
+
+```python
+# 直径 10 cm の円の面積を求める
+area = 3.14 * (10 / 2) ** 2
+print(area) # 78.5
+
+# 直径 10 cm の円の面積を求める
+area = 3.141592 * (10 / 2) ** 2
+print(area) # 78.5398
+```
+
+まず、3.14 や 3.141592 は、円周率の近似値ですが、すべての人にとって意味を理解できる数字ではないことと、小数点の桁数の違いで管理が煩雑になります。とはいえ、円周率が後から変更されることはあまりないため、定数を使うことで管理が煩雑になることを防ぎます。
+
+これが税率だとすると、税率が変更されることで、定数の値が変更されることがあり、それを一箇所で管理することで管理が容易になります。
+
+```python
+# 税率を定義
+TAX_RATE = 0.1
+
+# 税込み価格を求める
+price = 100
+taxed_price = price * (1 + TAX_RATE)
+print(taxed_price) # 110
+```
+
+定数と便宜上説明していますが、python では変数の宣言となんら仕組みは変わりません。ただ、命名規則として定数は大文字で宣言しているだけとなります。そのため、再代入がされないような管理方法でプロジェクト側での管理が必要となります。(マジックナンバーの回避)
 
 ## データ型
 
@@ -190,14 +300,54 @@ print(id(a)) # 4359022696
 
 しかし、型自体は存在しているため確認していきましょう。
 
-- **数値型**: 整数の int 型、浮動小数点の float 型, 複素数の complex 型
-- **文字列型**: 文字列の str 型
-- **真偽値型**: 真偽値の bool 型
-- **シーケンス型**: list 型, tuple 型, range 型
-- **マッピング型**: dict 型
-- **集合型**: set 型, frozenset 型
-- **バイナリ型**: bytes 型, bytearray 型, memoryview 型
-- **None 型**: NoneType 型
+- **数値**
+  {" "}
+  <Table
+    caption=""
+    colWidth={["6rem", "8rem", "2rem", "2rem", "2rem"]}
+    columns={["型", ["概要"].join("<br/>"), "変更可能", "反復可能", "順序"]}
+    data={[
+      ["int", ["整数型"].join("<br/>"), "×", "×", "×"],
+      ["float", ["浮動小数点型"].join("<br/>"), "×", "×", "×"],
+      ["complex", ["複素数型"].join("<br/>"), "×", "×", "×"],
+    ]}
+  />
+- **データ**
+  <Table
+    caption=""
+    colWidth={["6rem", "8rem", "2rem", "2rem", "2rem"]}
+    columns={["型", ["概要"].join("<br/>"), "変更可能", "反復可能", "順序"]}
+    data={[
+      ["str", ["文字列型"].join("<br/>"), "×", "⚪︎", "⚪︎"],
+      ["bytes", ["バイナリ型"].join("<br/>"), "×", "⚪︎", "⚪︎"],
+      ["bytearray", ["バイナリ型"].join("<br/>"), "×", "⚪︎", "⚪︎"],
+      ["memoryview", ["バイナリ型"].join("<br/>"), "×", "⚪︎", "⚪︎"],
+    ]}
+  />
+- **コンテナ**: シーケンス型(list 型, tuple 型, range 型)、マッピング型(dict 型)、集合型(set 型, frozenset 型)
+  <Table
+    caption=""
+    colWidth={["6rem", "8rem", "2rem", "2rem", "2rem"]}
+    columns={["型", ["概要"].join("<br/>"), "変更可能", "反復可能", "順序"]}
+    data={[
+      ["list", ["リスト型(順序を持つリスト)"].join("<br/>"), "⚪︎", "⚪︎", "⚪︎"],
+      ["tuple", ["タプル型(順序を持つリスト、変更不可)"].join("<br/>"), "×", "⚪︎", "⚪︎"],
+      ["range", ["範囲型"].join("<br/>"), "⚪︎", "⚪︎", "⚪︎"],
+      ["dict", ["辞書型"].join("<br/>"), "⚪︎", "⚪︎", "⚪︎"],
+      ["set", ["集合型、順序を持たない値の集合"].join("<br/>"), "⚪︎", "⚪︎", "⚪︎"],
+      ["frozenset", ["集合型、順序を持たない値の集合、変更不可"].join("<br/>"), "×", "⚪︎", "⚪︎"],
+    ]}
+  />
+- **その他**
+  <Table
+    caption=""
+    colWidth={["6rem", "8rem", "2rem", "2rem", "2rem"]}
+    columns={["型", ["概要"].join("<br/>"), "変更可能", "反復可能", "順序"]}
+    data={[
+      ["bool", ["真偽値型"].join("<br/>"), "×", "×", "×"],
+      ["None", ["None 型"].join("<br/>"), "×", "×", "×"],
+    ]}
+  />
 
 python のデータ型は type() 関数で確認できます。
 
@@ -206,9 +356,19 @@ a = 10
 print(type(a)) # <class 'int'>
 ```
 
+:::note[変更可能、反復可能、順序]
+
+- 変更可能(ミュータブル): 変更可能なオブジェクト
+- 変更不可(イミュータブル): 変更不可なオブジェクト
+- 反復可能(イテラブル): 反復可能なオブジェクト
+- 順序(シーケンス): 順序を持つオブジェクト
+- コンテナ: 配下に複数の値を格納可能なオブジェクト
+
+:::
+
 ### 数値型
 
-数値型は int (整数型)と float (浮動小数点型)があります。
+数値型は int (整数型)と float (浮動小数点型)、complex (複素数型)があります。
 
 ```python
 i = 10
@@ -217,6 +377,91 @@ c = 1j
 
 print(type(i)) # <class 'int'>
 print(type(f)) # <class 'float'>
+print(type(c)) # <class 'complex'>
+```
+
+#### int 型
+
+int 型は整数型です。
+
+```python
+i = 10
+print(type(i)) # <class 'int'>
+```
+
+10 進数リテラルは私たちが日常的に使っている、最も一般的な整数の表現で、整数、負数、ゼロを表現できます。
+負数には、先頭にマイナス記号を付けることで表現できます。
+
+```python
+i = -10
+print(type(i)) # <class 'int'>
+```
+
+16 進数リテラルは、0x で始まり、16 進数の数字を表現します。
+
+```python
+i = 0x10
+print(type(i)) # <class 'int'>
+```
+
+8 進数リテラルは、0o で始まり、8 進数の数字を表現します。
+
+```python
+i = 0o10
+print(type(i)) # <class 'int'>
+```
+
+2 進数リテラルは、0b で始まり、2 進数の数字を表現します。
+
+```python
+i = 0b10
+print(type(i)) # <class 'int'>
+```
+
+2 進数で例えば、`0b120` のような値は存在しません。そのため、実行時エラーとなります。
+
+#### float 型
+
+float 型は浮動小数点型です。
+
+```python
+f = 10.0
+print(type(f)) # <class 'float'>
+```
+
+整数リテラルに比べると複雑なのが指数表現が可能です。
+
+```python
+f = 1.23e-4
+print(f) # 0.000123
+```
+
+指数を表す、`e` や `E` を使用します。
+
+```python
+f = 1.23E-4
+print(f) # 0.000123
+```
+
+指数表現は、`1.23e-4` のように、`1.23` に `10` の `-4` 乗を掛けることを表します。
+
+:::note[数値セパレータ]
+
+数値セパレータは、`_` を使用します。
+
+```python
+f = 1_234_567.89
+print(f) # 1234567.89
+```
+
+:::
+
+#### complex 型
+
+complex 型は複素数型です。
+
+```python
+c = 1j
 print(type(c)) # <class 'complex'>
 ```
 
@@ -244,6 +489,148 @@ s = "Hello"
 print(type(s)) # <class 'str'>
 ```
 
+```python
+# エラーとなる SyntaxError: invalid syntax
+print("You are "GREAT" teacher")
+
+# エラーとならない
+print("You are 'GREAT' teacher")
+print('You are "GREAT" teacher')
+```
+
+文字列は、`""` または `''` で囲むことで表現できます。
+
+#### クォート文字列をエスケープ処理する
+
+```python
+# これは SyntaxError: invalid syntax
+print('He's "GREAT" teacher!!')
+```
+
+以下のように書き換える
+
+```python
+print("He's \"GREAT\" teacher!!")
+# もしくは
+print('He\'s "GREAT" teacher!!')
+
+# どちらも以下のように、出力される
+# He's "GREAT" teacher!!
+```
+
+エスケープシーケンスは、`\` を使用します。
+
+<Table
+  caption=""
+  colWidth={["9rem"]}
+  columns={["エスケープシーケンス", "説明"]}
+  data={[
+    ["`\\\\`", ["バックスラッシュ"].join("<br/>")],
+    ['`"`', ["ダブルクォート"].join("<br/>")],
+    ["`'`", ["シングルクォート"].join("<br/>")],
+    ["`\\b`", ["バックスペース"].join("<br/>")],
+    ["`\\f`", ["フォームフィード"].join("<br/>")],
+    ["`\\n`", ["改行"].join("<br/>")],
+    ["`\\r`", ["リターン"].join("<br/>")],
+    ["`\\t`", ["タブ"].join("<br/>")],
+    ["`\\v`", ["垂直タブ"].join("<br/>")],
+    ["`\\123`", ["8進数の文字"].join("<br/>")],
+    ["`\\x7A`", ["16進数の文字"].join("<br/>")],
+    ["`\\u0000`", ["16進数の文字(4桁)"].join("<br/>")],
+    ["`\\U00000000`", ["16進数の文字(8桁)"].join("<br/>")],
+    ["`\\0`", ["NULL"].join("<br/>")],
+  ]}
+/>
+
+#### 複数行の文字列
+
+```python
+s = """
+Hello
+World
+"""
+print(s)
+# Hello
+# World
+```
+
+#### raw 文字列
+
+Windows のパスを表現する場合、`\` を使用するとエスケープシーケンスとして扱われてしまいます。そのため、二重に `\` を使用する必要がありますが、それを回避するために raw 文字列を使用します。
+raw 文字列は、`r` を使用します。`\` をエスケープシーケンスとして扱わないため、パスを表現する場合に便利です。
+
+```python
+print('C:\\Windows\\AppPatch\\en-US') # このように書くのは面倒
+
+# 以下のように書くことができる
+print(r'C:\Windows\AppPatch\en-US')
+
+# どちらも、C:\Windows\AppPatch\en-US と出力される。
+```
+
+#### フォーマット文字列
+
+フォーマット文字列は、`f` または `F`、`format()` 関数を使用します。
+文字列中に`{..}` を使用することで、変数を埋め込むことができます。
+
+```python
+name = "John"
+s = f"Hello {name}"
+print(s) # Hello John
+
+s = F"Hello {name}"
+print(s) # Hello John
+
+s = "Hello {}".format(name)
+print(s) # Hello John
+```
+
+また、変数だけでなく、式、関数を埋め込むこともできます。
+
+```python
+s = f"Hello {3+4}"
+print(s) # Hello 7
+
+name = "John"
+s = f"Hello {name.upper()}"
+print(s) # Hello JOHN
+
+s = f"Hello {len(name)}"
+print(s) # Hello 4
+```
+
+フォーマット文字列は、raw 文字列、複数行文字列と組み合わせることもできます。
+
+```python
+# f-string + 複数行文字列
+name = "Alice"
+msg = f"""
+Hello, {name}!
+Welcome to Python.
+"""
+print(msg)
+# 出力:
+# Hello, Alice!
+# Welcome to Python.
+
+# f-string + raw文字列
+path = "user"
+print(rf"C:\Users\{path}\Documents")
+# 出力:
+# C:\Users\user\Documents
+
+# f-string + 複数行 + raw文字列
+folder = "project"
+multi = rf"""
+C:\dev\{folder}\src
+C:\dev\{folder}\tests
+"""
+print(multi)
+# 出力:
+# C:\dev\project\src
+# C:\dev\project\tests
+```
+
 #### `str()` の相互変換
 
 数値を文字列に変換できる
@@ -260,8 +647,6 @@ print(s) # [1, 2, 3]
 
 ### 真偽値型
 
-### 真偽値型
-
 bool 型は真偽値の bool 型です。
 
 ```python
@@ -271,6 +656,31 @@ bool_value = (10 > 5)
 print(type(b)) # <class 'bool'>
 print(bool_value) # True
 print(type(bool_value)) # <class 'bool'>
+```
+
+自動で false とみなされる
+
+```python
+print(bool(0)) # False
+print(bool(0.0)) # False
+print(bool(0j)) # False
+print(bool("")) # False
+print(bool([])) # False
+print(bool({})) # False
+print(bool(())) # False
+print(bool(range(0))) # False
+print(bool(set())) # False
+print(bool(frozenset())) # False
+print(bool(dict())) # False
+print(bool(None)) # False
+print(bool(False)) # False
+# 逆に true とみなされる
+print(bool(1)) # True
+print(bool(1.0)) # True
+print(bool(1j)) # True
+print(bool("Hello")) # True
+print(bool([1, 2, 3])) # True
+print(bool({"a": 1, "b": 2})) # True
 ```
 
 ### シーケンス型
@@ -293,16 +703,23 @@ print(type(r)) # <class 'range'>
 ```python
 l = [1, 2, 3]
 print(l) # [1, 2, 3]
+print(type(l)) # <class 'list'>
+
 l2 = list((1, 2, 3))
 print(l2) # [1, 2, 3]
+
 l3 = list("Hello")
 print(l3) # ['H', 'e', 'l', 'l', 'o']
+
 l4 = list(range(1, 10, 2))
 print(l4) # [1, 3, 5, 7, 9]
+
 l5 = list(range(10))
 print(l5) # [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
 l6 = list(range(10, 0, -1))
 print(l6) # [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+
 l7 = [1, 2, 3, 4, [5, 6, 7], "Hello", True]
 print(l7) # [1, 2, 3, 4, [5, 6, 7], 'Hello', True]
 print(l7[0]) # 1
@@ -629,10 +1046,12 @@ print(a * b) # 30 乗算
 print(a / b) # 3.3333333333333335 除算
 print(a % b) # 1 剰余
 print(a ** b) # 1000 べき乗
-print(a // b) # 3 整数除算(商の整数部分)
+print(a // b) # 3 整数除算(商の整数部分、あまりを切り捨て)
 ```
 
-文字列の結合
+#### 文字列の結合
+
+文字列の結合は、`+` を使用します。
 
 ```python
 s1 = "Hello"
@@ -643,6 +1062,86 @@ i = 456
 # print(s1 + i) # TypeError: can only concatenate str (not "int") to str
 print(s1 + str(i)) # Hello456
 ```
+
+#### 除算を表す演算子 `/` と `//` の違い
+
+`/` は浮動小数点数の除算を行います。
+`//` は整数の除算を行います。
+
+```python
+print( 5 / 3) # 1.6666666666666667
+print( 5 // 3) # 1
+
+print( 5 / 3.0) # 1.6666666666666667
+print( 5 // 3.0) # 1.0
+```
+
+なお、整数部の商と剰余を求める場合は、`divmod()` 関数を使用します。
+
+```python
+print(divmod(5, 3)) # (1, 2)
+print(type(divmod(5, 3))) # <class 'tuple'>
+```
+
+戻り値は、商と剰余をタプルで返します。
+
+#### 浮動小数点数の演算には注意が必要
+
+浮動小数点数の演算には注意が必要です。
+
+```python
+print(0.1 + 0.2) # 0.30000000000000004
+print(0.2 * 3) # 0.6000000000000001
+```
+
+これは、Python が内部的に数値を 2 進数で演算しているために生じる誤差です。
+10 進数ではシンプルに表せる `0.2` という数値ですら、2 進数では、0.00110011... という無限循環小数となります。
+そのため、以下の式は False となります。
+
+```python
+print(0.2 * 3 == 0.6) # False
+```
+
+このような問題を避けるために、Decimal 型を使用します。
+Decimal 型は、10 進数での浮動小数点数をサポートする型です。
+
+```python
+from decimal import Decimal
+
+print(Decimal("0.2") * 3 == Decimal("0.6")) # True
+```
+
+浮動小数点数の演算には誤差が生じるため、比較演算子ではなく、誤差の範囲を設けて比較する必要があります。
+誤差の範囲は、`math.isclose()` 関数を使用します。
+
+```python
+import math
+
+# 誤差がある浮動小数点数の比較
+print(0.1 + 0.2 == 0.3)  # False
+print(math.isclose(0.1 + 0.2, 0.3))  # True
+
+# より厳密な比較（相対誤差と絶対誤差を指定）
+print(math.isclose(0.1 + 0.2, 0.3, rel_tol=1e-9, abs_tol=0.0))  # True
+
+# 大きな数値での比較
+print(math.isclose(1e10 + 1e-10, 1e10))  # True
+
+# 小さな数値での比較
+print(math.isclose(1e-10 + 1e-10, 2e-10))  # True
+
+# デフォルトの許容誤差
+print(math.isclose(1.0, 1.000000000000001))  # True
+print(math.isclose(1.0, 1.00000000000001))   # True
+```
+
+`math.isclose()` のパラメータ：
+
+- `a, b`: 比較する 2 つの値
+- `rel_tol`: 相対誤差の許容値（デフォルト: 1e-9）
+- `abs_tol`: 絶対誤差の許容値（デフォルト: 0.0）
+
+相対誤差は `abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)` で計算されます。
 
 ### 比較演算子
 
@@ -659,6 +1158,72 @@ print(a >= b) # False
 print(a <= b) # True
 ```
 
+異なる型同士の比較は、型変換を行ってから比較を行わないと意図しない結果となります。
+
+```python
+print(10 == "10") # False
+print(False == None) # False
+```
+
+数値の比較は例外で、型変換を行わずに比較を行います。
+
+```python
+print(1 == 1.0) # True
+print(1.5 < 1) # False
+
+from decimal import Decimal
+print(Decimal("1.5") < 1) # False
+```
+
+#### リストの比較
+
+先頭から要素を比較していき、最初に異なる要素が見つかった時に比較の決定を行います。
+
+```python
+print([1, 2, 3] == [1, 2, 3]) # True
+
+data1 = [1, 2, 3]
+data2 = [1, 5]
+data3 = [1, 2]
+
+print(data1 < data2) # True *①
+print(data1 > data3) # True *②
+```
+
+- `①` では、data1 の 2 番目の要素が 2 で、 data2 の 2 番目の要素が 5 であるため、data1 が data2 より小さいと判断されます。
+- `②` では、data1 の 2 番目の要素が 2 で、 data3 の 2 番目の要素が 2 であるため、data1 が data3 より大きいと判断されます。
+
+他のコンテナ型である、セットは `<`、`>` は集合としての包含関係を判定します。
+辞書については、大小比較はできません。
+
+#### 浮動小数点数の比較
+
+浮動小数点数を比較するには以下のような方法があります。
+
+1. Decimal 型を使用する
+2. 誤差の範囲を設けて比較する
+3. isclose() 関数を使用する
+
+```python
+from decimal import Decimal
+print(Decimal("0.1") + Decimal("0.2") == Decimal("0.3")) # True
+```
+
+```python
+EPSILON = 1e-10
+print(abs(0.1 + 0.2 - 0.3) < EPSILON) # True
+```
+
+定数 `EPSILON` は、誤差の範囲を設けるための定数です。
+計算機イプシロン、丸め単位などとも呼ばれ、この例では、小数第 10 位までの誤差を許容することを意味します。
+
+```python
+import math
+print(math.isclose(0.1 + 0.2, 0.3)) # True
+```
+
+`math.isclose()` 関数は、相対誤差と絶対誤差の両方を考慮して比較を行います（デフォルトでは相対誤差 1e-9）。
+
 ### 論理演算子
 
 論理演算子は真偽値を演算するための演算子です。
@@ -670,6 +1235,27 @@ print(a and b) # False
 print(a or b) # True
 print(not a) # False
 print(not b) # True
+```
+
+<Table
+  caption=""
+  colWidth={["6rem", "6rem", "6rem", "6rem", "6rem"]}
+  columns={["左式", "右式", "and", "or", "^"]}
+  data={[
+    ["True", "True", "True", "True", "False"],
+    ["True", "False", "False", "True", "True"],
+    ["False", "True", "False", "True", "True"],
+    ["False", "False", "False", "False", "False"],
+  ]}
+/>
+
+`^` は排他的論理和を表します。
+
+```python
+print(True ^ True) # False
+print(True ^ False) # True
+print(False ^ True) # True
+print(False ^ False) # False
 ```
 
 ### 代入演算子
@@ -716,6 +1302,194 @@ a <<= b # a = a << b
 print(a) # 20
 ```
 
+#### インクリメント・デクリメント
+
+インクリメント・デクリメントは、変数の値を 1 増やす・減らすための演算子です。
+
+```python
+a = 10
+a += 1 # a = a + 1
+print(a) # 11
+a -= 1 # a = a - 1
+print(a) # 10
+```
+
+Python には `++` や `--` のようなインクリメント・デクリメントの演算子はありません。
+
+```python
+a = 10
+a++ # SyntaxError: invalid syntax
+a-- # SyntaxError: invalid syntax
+```
+
+### 複合代入演算子
+
+複合代入演算子は、代入演算子と算術演算子を組み合わせた演算子です。
+
+```python
+a = 10
+a += 1 # a = a + 1
+print(a) # 11
+
+a -= 1 # a = a - 1
+print(a) # 10
+
+a *= 2 # a = a * 2
+print(a) # 20
+
+a /= 2 # a = a / 2
+print(a) # 10.0
+
+a %= 3 # a = a % 3
+print(a) # 1.0
+
+a **= 2 # a = a ** 2
+print(a) # 1.0
+```
+
+### ミュータブル・イミュータブル
+
+```python
+data1 = [1, 2, 3]
+data2 = data1
+data1[0] = 100
+print(data1) # [100, 2, 3]
+print(data2) # [100, 2, 3]
+print(data1 == data2) # True
+
+x = 1
+y = x
+print(x == y) # True
+x += 10
+print(x == y) # False
+print(x) # 11
+print(y) # 1
+```
+
+data2 = data1 によって、data1 、data2 は同じオブジェクトを指している。data1 への操作は data2 にも反映されます。しかし、y に x を同様に代入しているが、出力結果の y は 1 のままです。
+これは、リスト型がミュータブル(変更可能)な型であるのに対して、整数型がイミュータブル(変更不可能)な型であるためです。
+y に x を代入した時点では、x の値がコピーされて y に代入されます。
+その後、x に 10 を加算しても、y の値は変わりません。
+(オブジェクトの比較は `==` で行うことができます。)
+
+このように、型がミュータブル・イミュータブルであるかによって値を操作した時の影響範囲が変化する点を押さえましょう。
+
+### アンパック代入
+
+アンパック代入は、複数の変数に複数の値を同時に代入するための演算子です。
+
+```python
+a, b = 1, 2
+print(a) # 1
+print(b) # 2
+
+data = [1, 2, 3]
+a, b, c = data
+print(a) # 1
+print(b) # 2
+print(c) # 3
+
+data = [1, 2, 3]
+a, b = data # ValueError: too many values to unpack (expected 2)
+```
+
+右辺のリストが個々の要素に分解されて、それぞれ対応する変数 a ~ c に代入されることができます。
+左辺の数が足りていないと、`ValueError` が発生します。
+
+#### 残りの要素をまとめて代入
+
+`*` を使用することで、残りの要素をまとめて代入することができます。
+
+```python
+data = [1, 2, 3, 4, 5]
+a, b, *c = data
+print(a) # 1
+print(b) # 2
+print(c) # [3, 4, 5]
+```
+
+#### 一部の要素を切り捨てる
+
+アンパック代入で、一部の要素が入らない場合は、`_` を使用します。
+
+```python
+data = [1, 2, 3, 4, 5]
+a, _, b, _, c = data
+print(a) # 1
+print(b) # 3
+print(c) # 5
+
+# 途中の部分をまとめて不要にし、最初と最後だけ代入する
+data = [1, 2, 3, 4, 5]
+a, *_, b = data
+print(a) # 1
+print(b) # 5
+
+# 変数の数を確認して代入してくれている。
+data = [1, 2, 3, 4, 5]
+a, *_, b, c = data
+print(a) # 1
+print(b) # 4
+print(c) # 5
+```
+
+#### 入れ子のリストをアンパックすることもできます。
+
+```python
+data = [1, 2, [31, 32, 33]]
+a, b, c = data
+print(a) # 1
+print(b) # 2
+print(c) # [31, 32, 33]
+
+# 入れ子のリストをアンパックするときは、括弧で囲む必要があります。
+x, y, (z1, z2, z3) = data
+print(x) # 1
+print(y) # 2
+print(z1) # 31
+print(z2) # 32
+print(z3) # 33
+```
+
+#### 変数のスワッピング
+
+アンパック代入を使用することで、変数のスワッピングを行うことができます。
+
+```python
+a = 1
+b = 2
+a, b = b, a
+print(a) # 2
+print(b) # 1
+```
+
+### 新しい代入演算子 `:=`(セイウチ演算子)
+
+```javascript
+y = (x = 20) / 10;
+```
+
+この場合の計算は `(x = 20)` という代入式が `20` を返し、`y = 20 / 10` という順番になります。
+このような式は、Python ではエラーとなります。
+
+```python
+y = (x = 20) / 10 # SyntaxError: invalid syntax
+```
+
+これは、Python では代入は式ではなく文として扱われるためです。文は値を返さないので、`x = 20` の結果で値を返すことがありません。
+
+新しい代入演算子 `:=` は、代入を行いながら式として値を返すことができます。
+`a := 10` は、`a = 10` と同じ代入を行い、さらに `10` という値を返します。
+
+```python
+a = 1
+b = 2
+if (a := 10) > 0:
+    print(a) # 10
+else:
+    print(a) # 1
+```
+
 ### is ・ is not 演算子
 
 厳密な比較(オブジェクトの比較)を行う演算子です。
@@ -747,6 +1521,46 @@ is not 演算子は同じオブジェクトでないかを確認する演算子�
 print("l1 is not l2:", l1 is not l2) # True
 print("l1 is not l3:", l1 is not l3) # False
 ```
+
+#### 同一性と同値性
+
+- 同一性: 参照値が同じオブジェクトを参照していること
+- 同値性: オブジェクトが同じ値を持っていること
+
+```python
+a = [1, 2, 3]
+b = [1, 2, 3]
+print(a is b) # False # a と b は別のオブジェクトを参照している
+print(a == b) # True # a と b は同じ値を持っている
+
+a = b # a と b は同じオブジェクトを参照している
+print(a is b) # True
+print(a == b) # True
+```
+
+python がメモリを節約するためにイミュータブルな値に対して同じオブジェクトを再利用している場合もあります。
+
+```python
+a = 1
+b = 1
+print(a is b) # True
+```
+
+:::caution
+
+None は値が空であるということを意味します。(他の言語の null、nil と同じようなもの)
+ある式が None であるかを判定するには、`==` を使用せず、 is 演算子を使用します。
+
+```python
+a = None
+print(a is None) # True
+print(a == None) # True
+```
+
+どちらも True となりますが、`==` を使用すると、左辺のオペランドの型によって結果が変わります。
+is 演算子は、左辺のオペランドの型によらず、同じオブジェクトを参照しているかを判定するため、None と同一であることを判定し、確実に None であることを判定できるのです。
+
+:::
 
 ### メンバー演算子
 
@@ -1023,10 +1837,6 @@ for i in range(1, 101):
     else:
         print("other ******************: ", i)
 ```
-
-### match 文
-
-### pass
 
 ### 三項演算子
 

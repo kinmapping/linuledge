@@ -1,0 +1,1213 @@
+---
+title: 基本(標準ライブラリ 基本)
+description: 基本(標準ライブラリ 基本)
+tags:
+  - "Python"
+sidebar:
+  # このリンクのカスタムラベルを設定します
+  label: 基本(標準ライブラリ 基本)
+  # このリンクの順番をカスタマイズします（数字が小さいほど上に表示されます）
+  order: 30
+  # このリンクにバッジを追加します
+  # badge:
+  #     text: ""
+  #     variant: tip
+---
+
+import { LinkCard, Tabs, TabItem, Steps } from "@astrojs/starlight/components";
+import LinkPreview from "@components/LinkPreview.astro";
+import MermaidChart from "@components/MermaidChart.astro";
+import Table from "@components/Table.astro";
+
+---
+
+## ライブラリの分類
+
+1. 型と関数
+   関数には、print をはじめ、input、sum、abs などなど
+   方には、コードの中であ扱える情報の性質を表す仕組み。
+1. 組み込みライブラリとモジュール
+   Python インタープリターに組み込まれている(Builtin)関数や型を提供するライブラリ。
+   一方、Builtin 出ない型や関数はモジュールという枠で提供される。
+
+### 関数
+
+関数とは、何かしらの入力を与えることによって、あらかじめ決められた処理を行い、その結果を返す仕組みのこと。
+関数の呼び出しは、`関数名(引数, ..., 引数名 = 値)` のように記述する。
+
+- `値, ...` のように値を列挙するだけの引数を**位置引数**と言う
+- `名前=値, ...` のように名前と値を組み合わせた引数を**キーワード引数**と言う
+
+### 型
+
+コードの中で扱える値の種類を決めるための仕組み。また、クラスとも言える。
+クラスにたいして具体的な値を与えて、コードの中で利用できるようにすることをインスタンス化と言います。
+型は設計図であり、インスタンスはその設計図を元に作成された実体です。
+
+型に属する関数として、メソッドと呼びます。
+
+str 型であれば
+
+- 文字列から前後の空白を除去するための trim メソッド
+- 指定の文字で分割する split メソッド
+- 指定の文字で置き換える replace メソッド
+- 指定の文字で検索する find メソッド
+
+list 型であれば、
+
+- リストの要素を追加する append メソッド
+- リストの要素を削除する remove メソッド
+- リストの要素を取得する get メソッド
+
+メソッドの呼びだしは、`オブジェクト.メソッド名(引数, ..., 引数名 = 値)` のように記述する。
+
+### 組み込み型/関数とモジュール
+
+組み込み型とは、Python インタープリターに組み込まれている型のこと。
+組み込み型の関数には、print や input などがあり、ソースの中で直接利用できます。(準備はいらない。)
+
+一方、モジュールの関数は、モジュールをインポートすることで利用できます。
+
+```python
+import math
+print(math.sqrt(16))
+```
+
+#### 特定のメンパーだけをインポートする
+
+`import モジュール名`とすると、モジュールの中のすべての関数を利用できます。
+しかし、必要な関数だけ呼び出すこともできます。
+
+`from モジュール名 import 関数名, ...`とすると、モジュールの中の特定の関数だけを利用できます。
+
+```python
+from math import sqrt
+print(sqrt(16))
+```
+
+---
+
+## 文字列の操作
+
+### 文字列の長さを取得する
+
+```python
+s = 'Hello, World!'
+print(len(s)) # 13
+s = 'こんにちは、世界！'
+print(len(s)) # 9
+```
+
+len 関数では、日本語(マルチバイト)も正しく 1 文字としてカウントします。
+もしも、半角を 1 文字、全角を 2 文字としてカウントしたい場合は、`len` の代わりに `east_asian_width` 関数(unicodedata モジュール)を利用します。
+
+`east_asian_width` は、Unicode の文字の幅を取得する関数です。
+
+<Table
+  caption=""
+  colWidth={["6rem"]}
+  columns={["戻り値", "説明"]}
+  data={[
+    ["`F`", "FullWidth(全角英数)"],
+    ["`W`", "Wide(漢字、全角かな、全角カタカナ)"],
+    ["`A`", "Ambiguous(特殊文字)"],
+    ["`Na`", "Narrow(半角英数字)"],
+    ["`H`", "HalfWidth(半角カタカナ)"],
+    ["`N`", "HalfWidth(中立、いずれにも属さない)"],
+  ]}
+/>
+
+```python
+from unicodedata import east_asian_width
+
+# サンプルテキスト1: 英数字と日本語の混在
+data1 = 'WINGS: プロジェクト２０２０'
+print("=== サンプル1 ===")
+print(data1)
+count = 0
+for c in data1:
+    width = east_asian_width(c)
+    print(f"{c}: {width}", end=" ")
+    if width in ['F', 'W', 'A']:
+        count += 2
+    else:
+        count += 1
+print(f"\n文字幅: {count}")
+# === サンプル1 ===
+# WINGS: プロジェクト２０２０
+# W: Na I: Na N: Na G: Na S: Na :: Na  : Na プ: W ロ: W ジ: W ェ: W ク: W ト: W ２: F ０: F ２: F ０: F
+# 文字幅: 27
+
+# サンプルテキスト2: 全角英数字
+data2 = 'ＡＢＣ１２３'
+print("\n=== サンプル2 ===")
+print(data2)
+count = 0
+for c in data2:
+    width = east_asian_width(c)
+    print(f"{c}: {width}", end=" ")
+    if width in ['F', 'W', 'A']:
+        count += 2
+    else:
+        count += 1
+print(f"\n文字幅: {count}")
+# === サンプル2 ===
+# ＡＢＣ１２３
+# Ａ: F Ｂ: F Ｃ: F １: F ２: F ３: F
+# 文字幅: 12
+
+# サンプルテキスト3: 半角英数字
+data3 = 'ABC123'
+print("\n=== サンプル3 ===")
+print(data3)
+count = 0
+for c in data3:
+    width = east_asian_width(c)
+    print(f"{c}: {width}", end=" ")
+    if width in ['F', 'W', 'A']:
+        count += 2
+    else:
+        count += 1
+print(f"\n文字幅: {count}")
+# === サンプル3 ===
+# ABC123
+# A: Na B: Na C: Na 1: Na 2: Na 3: Na
+# 文字幅: 6
+
+# サンプルテキスト4: 記号と絵文字
+data4 = '★☆♪♫😀🎵'
+print("\n=== サンプル4 ===")
+print(data4)
+count = 0
+for c in data4:
+    width = east_asian_width(c)
+    print(f"{c}: {width}", end=" ")
+    if width in ['F', 'W', 'A']:
+        count += 2
+    else:
+        count += 1
+print(f"\n文字幅: {count}")
+# === サンプル4 ===
+# ★☆♪♫😀🎵
+# ★: A ☆: A ♪: A ♫: N 😀: W 🎵: W
+# 文字幅: 11
+
+# サンプルテキスト5: ひらがな・カタカナ
+data5 = 'あいうえおアイウエオ'
+print("\n=== サンプル5 ===")
+print(data5)
+count = 0
+for c in data5:
+    width = east_asian_width(c)
+    print(f"{c}: {width}", end=" ")
+    if width in ['F', 'W', 'A']:
+        count += 2
+    else:
+        count += 1
+print(f"\n文字幅: {count}")
+# === サンプル5 ===
+# あいうえおアイウエオ
+# あ: W い: W う: W え: W お: W ア: W イ: W ウ: W エ: W オ: W
+# 文字幅: 20
+```
+
+### 文字列を大文字/小文字に変換する
+
+<Table
+  caption=""
+  colWidth={["8rem"]}
+  columns={["メソッド", "説明"]}
+  data={[
+    ["`upper`", "小文字->大文字に変換する"],
+    ["`lower`", "大文字->小文字に変換する"],
+    ["`swapcase`", "大文字->小文字、小文字->大文字に変換する"],
+    ["`capitalize`", "先頭の文字を大文字に、残りを小文字に変換する"],
+    ["`title`", "単語の先頭を大文字に、残りを小文字に変換する"],
+    ["`casefold`", "大文字と小文字を区別しない"],
+  ]}
+/>
+
+```python
+# 文字列の大文字/小文字変換のサンプル
+text = "Hello World Python"
+
+print("=== 元の文字列 ===")
+print(text)
+
+print("\n=== upper() - 大文字に変換 ===")
+print(text.upper())  # HELLO WORLD PYTHON
+
+print("\n=== lower() - 小文字に変換 ===")
+print(text.lower())  # hello world python
+
+print("\n=== swapcase() - 大文字小文字を入れ替え ===")
+print(text.swapcase())  # hELLO wORLD pYTHON
+
+print("\n=== capitalize() - 先頭のみ大文字 ===")
+print(text.capitalize())  # Hello world python
+
+print("\n=== title() - 各単語の先頭を大文字 ===")
+print(text.title())  # Hello World Python
+
+print("\n=== casefold() - 大文字小文字を区別しない比較用 ===")
+print(text.casefold())  # hello world python
+
+# 実用的な例
+user_input = "  YES  "
+if user_input.strip().upper() == "YES":
+    print("ユーザーはYESと入力しました")
+
+# ファイル名の正規化
+filename = "My Document.PDF"
+normalized = filename.lower().replace(" ", "_")
+print(f"正規化されたファイル名: {normalized}")  # my_document.pdf
+
+# タイトルケースの例
+book_title = "the great gatsby"
+print(f"タイトルケース: {book_title.title()}")  # The Great Gatsby
+```
+
+### 部分文字列を取得する
+
+文字列から部分的な文字列を取り出すには、インデックス/スライス構文を利用します。
+
+```python
+文字列[開始インデックス]
+文字列[開始インデックス:終了インデックス]
+文字列[開始インデックス:終了インデックス:ステップ]
+```
+
+```python title="例: インデックス/スライス構文"
+s = 'Hello, World!'
+print(s[0]) # H
+print(s[7:12]) # World
+print(s[7:12:2]) # Wrl
+```
+
+### 文字の種類を判定する
+
+文字列に含まれる文字の種類を判定するには、`isdigit`、`isalpha`、`isalnum`、`isspace` などのメソッドを利用します。
+
+<Table
+  caption=""
+  colWidth={["9rem"]}
+  columns={["メソッド", "説明"]}
+  data={[
+    ["`isalnum`", "英数字かどうかを判定する"],
+    ["`isalpha`", "英字かどうかを判定する"],
+    ["`isascii`", "ASCII 文字かどうかを判定する"],
+    ["`isdecimal`", "10 進数の数字かどうかを判定する"],
+    ["`isdigit`", "数字かどうかを判定する"],
+    ["`isnumeric`", "数値文字列かどうかを判定する"],
+    ["`isidentifier`", "識別子かどうかを判定する"],
+    ["`islower`", "小文字かどうかを判定する"],
+    ["`isupper`", "大文字かどうかを判定する"],
+    ["`istitle`", "タイトルケースかどうかを判定する"],
+    ["`isprintable`", "印字可能かどうかを判定する"],
+    ["`isspace`", "空白かどうかを判定する"],
+  ]}
+/>
+
+数値を判定する `isdigit`、`isdecimal`、`isnumeric` の違いがわかりにくいです。
+
+<Table
+  caption=""
+  colWidth={["10rem"]}
+  columns={["文字種", "isdigit", "isdecimal", "isnumeric"]}
+  data={[
+    ["半角数字(`15`)", "True", "True", "True"],
+    ["上付き数字(`\u2078`)", "True", "False", "True"],
+    ["数値文字列(`１５`)", "True", "False", "True"],
+    ["ローマ数字(`ⅩⅤ`)", "False", "False", "True"],
+    ["漢数字(`一五`)", "False", "False", "True"],
+    ["バイト文字(`b'15'`)", "True", "エラー", "エラー"],
+  ]}
+/>
+
+全角の数値文字を判定するのではなく、数値(int/float)に変換するならば、unicodedata モジュールの `digit`、`numeric` 関数を利用します。
+
+```python
+from unicodedata import digit, numeric
+
+print(digit('1')) # 1
+print(numeric('1')) # 1.0
+print(digit('１')) # 1
+print(numeric('１')) # 1.0
+print(numeric('参')) # 3.0
+print(numeric('Ⅷ')) # 8.0
+```
+
+### 文字列を検索する
+
+#### 文字列の中で、特定の文字列が登場する文字位置を取得する
+
+文字列の中で、特定の文字列が登場する文字位置を取得するには、`find`、`rfind`、`index`、`rindex` メソッドを利用します。
+
+<Table
+  caption=""
+  colWidth={["10rem"]}
+  columns={["メソッド", "説明"]}
+  data={[
+    ["`find`", "指定した文字列が登場する最初の位置を取得する"],
+    ["`rfind`", "指定した文字列が登場する最後の位置を取得する"],
+    ["`index`", "指定した文字列が登場する最初の位置を取得する"],
+    ["`rindex`", "指定した文字列が登場する最後の位置を取得する"],
+  ]}
+/>
+
+```python
+# 文字列検索メソッドの使用例
+text = "Hello World Hello Python"
+#       012345678901234567890123
+
+print("=== 元の文字列 ===")
+print(text)
+
+print("\n=== find() - 最初の位置を検索 ===")
+print(f"'Hello' の位置: {text.find('Hello')}")  # 0
+print(f"'World' の位置: {text.find('World')}")  # 6
+print(f"'Python' の位置: {text.find('Python')}")  # 18
+print(f"'Java' の位置: {text.find('Java')}")  # -1 (見つからない)
+
+print("\n=== rfind() - 最後の位置を検索 ===")
+print(f"'Hello' の最後の位置: {text.rfind('Hello')}")  # 12
+print(f"'o' の最後の位置: {text.rfind('o')}")  # 22
+
+print("\n=== index() - 最初の位置を検索（例外発生） ===")
+try:
+    print(f"'Hello' の位置: {text.index('Hello')}")  # 0
+    print(f"'Java' の位置: {text.index('Java')}")  # ValueError: substring not found
+except ValueError as e:
+    print(f"ValueError: {e}")
+
+print("\n=== rindex() - 最後の位置を検索（例外発生） ===")
+try:
+    print(f"'Hello' の最後の位置: {text.rindex('Hello')}")  # 12
+    print(f"'Java' の最後の位置: {text.rindex('Java')}")  # ValueError: substring not found
+except ValueError as e:
+    print(f"ValueError: {e}")
+
+# 実用的な例
+email = "user@example.com"
+at_position = email.find('@')
+if at_position != -1:
+    username = email[:at_position]
+    domain = email[at_position + 1:]
+    print(f"ユーザー名: {username}") # ユーザー名: user
+    print(f"ドメイン: {domain}") # ドメイン: example.com
+
+# ファイル拡張子の検索
+filename = "document.txt"
+dot_position = filename.rfind('.')
+if dot_position != -1:
+    extension = filename[dot_position + 1:]
+    print(f"拡張子: {extension}") # 拡張子: txt
+
+# 複数のキーワード検索
+keywords = ["Python", "Java", "JavaScript"]
+text = "I love Python programming"
+for keyword in keywords:
+    position = text.find(keyword)
+    if position != -1:
+        print(f"'{keyword}' が見つかりました (位置: {position})")
+        # 'Python' が見つかりました (位置: 7)
+    else:
+        print(f"'{keyword}' は見つかりませんでした")
+        # 'Java' は見つかりませんでした
+        # 'JavaScript' は見つかりませんでした
+```
+
+#### 部分文字列の登場回数をカウントする
+
+部分文字列の登場回数をカウントするには、`count` メソッドを利用します。
+
+```python
+文字列.count(部分文字列)
+文字列.count(部分文字列, 開始位置)
+文字列.count(部分文字列, 開始位置, 終了位置)
+```
+
+```python
+text = "Hello World Hello Python Hello"
+#       012345678901234567890123456789
+print(text.count('Hello')) # 3
+print(text.count('Hello', 7)) # 2
+print(text.count('Hello', 7, 23)) # 1
+```
+
+### 文字列の前後から空白を除去する
+
+文字列の前後から空白を除去するには、`strip`、`lstrip`、`rstrip` メソッドを利用します。
+
+```python
+文字列.strip()
+文字列.lstrip()
+文字列.rstrip()
+```
+
+<Table
+  caption=""
+  colWidth={["10rem"]}
+  columns={["メソッド", "説明"]}
+  data={[
+    ["`strip`", "前後から空白を除去する"],
+    ["`lstrip`", "前から空白を除去する"],
+    ["`rstrip`", "後ろから空白を除去する"],
+  ]}
+/>
+
+```python
+text = "  Hello World \t\n\r"
+print(text.strip())
+print(text.lstrip())
+print(text.rstrip())
+
+# Hello World
+# Hello World
+#
+#   Hello World
+```
+
+strip メソッドはあくまで文字列の前後から空白を除去するメソッドです。そのため、文字列中の空白を取り除くには、`replace` メソッドを利用します。
+
+```python
+text = "  Hello World \t\n\r"
+print(text.replace(' ', ''))
+# HelloWorld
+# \t\n\r はそのまま残る
+```
+
+#### 文字列の前後から特定の文字列を除去する(Python 3.9 以降)
+
+Python 3.9 以降では、`removeprefix`、`removesuffix` メソッドを利用して、文字列の前後から特定の文字列を除去することができます。
+
+```python
+text = "Hello World"
+print(text.removeprefix("Hello")) # World
+print(text.removesuffix("World")) # Hello
+```
+
+### 文字列に特定の文字列が含まれるかを判定する
+
+<Table
+  caption=""
+  colWidth={["10rem"]}
+  columns={["メソッド", "説明"]}
+  data={[
+    ["`in` 演算子", "指定した文字列が含まれるかを判定する"],
+    ["`startswith`", "指定した文字列で始まるかを判定する"],
+    ["`endswith`", "指定した文字列で終わるかを判定する"],
+  ]}
+/>
+
+```python
+msg = 'WINGSプロジェクト'
+print('プロ' in msg) # True
+print('プロ' not in msg) # False
+print(msg.startswith('WINGS')) # True
+print(msg.endswith('WINGS')) # False
+print(not msg.startswith('WINGS')) # False
+print(msg.startswith('WINGS', 1)) # False
+print('プロ' in msg[6:]) # False
+print('wings' in msg) # False
+print('wings' in msg.casefold()) # True
+
+```
+
+`not in` で含まれていない判定を行うこともできます。
+`startswith` / `endswith` は指定した文字列で始まるか、終わるかを判定するメソッドです。
+`startswith` / `endswith` は小文字大文字を区別するため、`casefold` メソッドを利用して、大文字小文字を区別しないように揃えてから判定を行うこともできます。
+
+### 文字列を特定の区切り文字で分割する
+
+#### 一般的な分割 split / rsplit
+
+split メソッドは、文字列を前方から、rsplit メソッドは後方から、それぞれ分割します。
+
+```python
+元の文字列.split(区切り文字)
+元の文字列.rsplit(区切り文字)
+元の文字列.split(区切り文字, 分割回数)
+元の文字列.rsplit(区切り文字, 分割回数)
+```
+
+```python
+# split と rsplit の使用例
+text = "apple,banana,orange,grape"
+
+print("=== 元の文字列 ===")
+print(text)
+
+print("\n=== split() - 前方から分割 ===")
+print(text.split(','))  # ['apple', 'banana', 'orange', 'grape']
+
+print("\n=== rsplit() - 後方から分割 ===")
+print(text.rsplit(','))  # ['apple', 'banana', 'orange', 'grape']
+
+print("\n=== 分割回数を指定した場合 ===")
+print(text.split(',', 2))   # ['apple', 'banana', 'orange,grape']
+print(text.rsplit(',', 2))  # ['apple,banana', 'orange', 'grape']
+
+# 実用的な例
+print("\n=== 実用的な例 ===")
+
+# ファイルパスの分割
+filepath = "/home/user/documents/file.txt"
+print(f"ファイルパス: {filepath}")
+print(f"split: {filepath.split('/')}")      # ['', 'home', 'user', 'documents', 'file.txt']
+print(f"rsplit: {filepath.rsplit('/', 1)}") # ['/home/user/documents', 'file.txt']
+
+# メールアドレスの分割
+email = "user.name@example.com"
+print(f"\nメールアドレス: {email}")
+print(f"split: {email.split('@')}")      # ['user.name', 'example.com']
+print(f"rsplit: {email.rsplit('@', 1)}") # ['user.name', 'example.com']
+
+# 複数の区切り文字がある場合
+data = "key1=value1;key2=value2;key3=value3"
+print(f"\nデータ文字列: {data}")
+print(f"split: {data.split(';')}")      # ['key1=value1', 'key2=value2', 'key3=value3']
+print(f"rsplit: {data.rsplit(';', 1)}") # ['key1=value1;key2=value2', 'key3=value3']
+
+# 空白文字での分割
+sentence = "  Hello   World   Python  "
+print(f"\n文章: '{sentence}'")
+print(f"split: {sentence.split()}")      # ['Hello', 'World', 'Python']
+print(f"rsplit: {sentence.rsplit()}")    # ['Hello', 'World', 'Python']
+
+# 改行文字での分割
+multiline = "line1\nline2\nline3"
+print(f"\n複数行テキスト:\n{multiline}")
+print(f"split: {multiline.split('\\n')}")      # ['line1', 'line2', 'line3']
+print(f"rsplit: {multiline.rsplit('\\n', 1)}") # ['line1\nline2', 'line3']
+```
+
+#### 改行文字で文字列を分割する splitlines
+
+<Table
+  caption=""
+  colWidth={["10rem"]}
+  columns={["改行文字", "splitlines"]}
+  data={[
+    ["`\\n`", "改行文字"],
+    ["`\\r`", "復帰文字"],
+    ["`\\r\\n`", "改行文字 + 復帰文字"],
+    ["`\\x85`", "改行(C1制御コード)"],
+    ["`\\v`、`\\x0b`", "垂直タブ"],
+    ["`\\f`、`\\x0c`", "フォームフィード"],
+    ["`\\x1c`", "ファイル区切り"],
+    ["`\\x1d`", "グループ区切り"],
+    ["`\\x1e`", "レコード区切り"],
+    ["`\\u2028`", "行区切り(Unicode)"],
+    ["`\\u2029`", "段落区切り(Unicode)"],
+  ]}
+/>
+
+```python
+text = """
+こんにちは
+こんばんわ
+さようなら
+"""
+print(text.splitlines()) # ['', 'こんにちは', 'こんばんわ', 'さようなら']
+print(text.splitlines(True)) # ['\n', 'こんにちは\n', 'こんばんわ\n', 'さようなら\n']
+```
+
+#### partition、rpartition
+
+partition メソッドは、文字列を前方から、rpartition メソッドは後方から、それぞれ分割します。
+最初に見つけた指定文字列で分割を行い、分割した文字列をタプルで返します。
+
+```python
+元の文字列.partition(区切り文字)
+元の文字列.rpartition(区切り文字)
+```
+
+```python
+text = "こんにちは Hello World"
+print(text.partition(' ')) # ('こんにちは', ' ', 'Hello World')
+print(text.rpartition(' ')) # ('こんにちは Hello', ' ', 'World')
+```
+
+### リストを結合する
+
+#### 文字列を結合する join
+
+join メソッドは、指定した文字列で結合します。
+
+```python
+区切り文字.join(リスト)
+```
+
+```python
+text = ['こんにちは', 'Hello', 'World']
+print(' '.join(text)) # こんにちは Hello World
+```
+
+### 文字列を置き換え
+
+#### 文字列を置き換える replace
+
+replace メソッドは、指定した文字列を置き換えます。
+
+```python
+元の文字.replace(置換対象の文字列, 置換後の文字列, 置換回数)
+```
+
+```python
+# replace メソッドの使用例
+text = "Hello World Hello Python"
+
+print("=== 元の文字列 ===")
+print(text)
+
+print("\n=== 基本的な置換 ===")
+print(text.replace('Hello', 'Hi'))  # Hi World Hi Python
+
+print("\n=== 置換回数を指定 ===")
+print(text.replace('Hello', 'Hi', 1))  # Hi World Hello Python
+
+print("\n=== 空文字列への置換（削除） ===")
+print(text.replace('Hello', ''))  #  World  Python
+
+print("\n=== 複数文字の置換 ===")
+print(text.replace('Hello World', 'Goodbye'))  # Goodbye Hello Python
+
+# 実用的な例
+print("\n=== 実用的な例 ===")
+
+# ファイル名の正規化
+filename = "My Document (1).txt"
+normalized = filename.replace(' ', '_').replace('(', '').replace(')', '')
+print(f"元のファイル名: {filename}")
+print(f"正規化後: {normalized}")  # My_Document_1.txt
+
+# HTMLタグの除去
+html_text = "<p>This is a <b>bold</b> text.</p>"
+clean_text = html_text.replace('<p>', '').replace('</p>', '').replace('<b>', '').replace('</b>', '')
+print(f"\nHTMLテキスト: {html_text}")
+print(f"クリーンテキスト: {clean_text}")  # This is a bold text.
+
+# 改行文字の統一
+multiline_text = "line1\r\nline2\nline3\r"
+unified = multiline_text.replace('\r\n', '\n').replace('\r', '\n')
+print(f"\n元のテキスト: {repr(multiline_text)}")
+print(f"統一後: {repr(unified)}")
+
+# 数値のフォーマット
+price = "1000円"
+formatted_price = price.replace('円', ' 円')
+print(f"\n価格: {price}")
+print(f"フォーマット後: {formatted_price}")  # 1000 円
+
+# パスワードのマスキング
+password = "mypassword123"
+masked = password.replace(password[3:-3], '*' * (len(password) - 6))
+print(f"\nパスワード: {password}")
+print(f"マスク後: {masked}")  # myp********123
+
+# 文字列の正規化（全角→半角）
+fullwidth = "１２３ＡＢＣ"
+halfwidth = fullwidth.replace('１', '1').replace('２', '2').replace('３', '3').replace('Ａ', 'A').replace('Ｂ', 'B').replace('Ｃ', 'C')
+print(f"\n全角文字: {fullwidth}")
+print(f"半角文字: {halfwidth}")  # 123ABC
+
+# 複数置換の連鎖
+text_with_quotes = "He said 'Hello' and 'Goodbye'"
+cleaned = text_with_quotes.replace("'", '"').replace('"Hello"', "'Hello'")
+print(f"\n元のテキスト: {text_with_quotes}")
+print(f"置換後: {cleaned}")  # He said 'Hello' and "Goodbye"
+```
+
+### 文字を整形する
+
+#### format メソッド
+
+```python
+元の文字.format(*args, **kwargs)
+```
+
+- `*args` : 書式に割り当てる値(可変長引数)
+- `**kwargs` : 書式に割り当てる値(キーワード引数)
+
+```python
+print('{}は{}、{}歳です。'.format('さくら', '女の子', 2)) # さくらは女の子、2歳です。
+print('{0}は{2}歳の{1}歳です。'.format('さくら', '女の子', 2)) # さくらは女の子、2歳です。
+print('{name}は{gender}、{age}歳です。'.format(name='さくら', gender='女の子', age=2)) # さくらは女の子、2歳です。
+```
+
+:::tip[書式の指定]
+置き換えフィールド`{}`には、コロン`:`を使って書式を指定できます。
+
+```python
+{1:>+12,.2f} # 12桁の右寄せで小数点以下2桁まで表示
+```
+
+書式指定子
+
+```
+[[fill]align][sign][z][#][0][width][group_opt][.prec][type]
+```
+
+- `fill` : 埋める文字
+- `align` : 寄せる方向
+  - `<` : 左寄せ
+  - `>` : 右寄せ
+  - `^` : 中央寄せ
+  - `=` : 符号の後方を埋める
+- `sign` : 符号の表示
+  - `+` : 符号を表示
+  - `-` : 符号を表示しない
+  - ` ` : 符号を表示しない
+- `定数` : 0 埋め
+  - `z` : 丸めの結果 -0.0 となった値を 0.0 に変換する
+  - `#` : 16 進数の場合に 0x を表示
+  - `0` : 0 埋め
+- `width` : 最小の表示幅
+- `group_opt` : 桁区切り文字
+  - `,` : 桁区切り文字(3 桁ごとにカンマを挿入)
+  - `_` : 桁区切り文字(3 桁ごとにアンダースコアを挿入)
+- `prec` : 有効桁数、type が f の場合は、小数点以下の桁数。g の場合は小数点前後の桁数
+- `type` : 型
+  - `%` : パーセント
+  - `d` : 10 進数
+  - `b` : 2 進数
+  - `o` : 8 進数
+  - `x`、`X` : 16 進数
+  - `e`、`E` : 指数表記
+  - `f`、`F` : 固定小数点表記
+  - `g`、`G` : 指数表記か固定小数点表記
+  - `s` : 文字列
+
+:::
+
+### str 型、bytes 型を変換する
+
+#### 文字列をエンコードする `encode`
+
+Python の文字列は (str 型)は、文字列情報を Unicode データ(コードポイント)として保存します。
+しかし、すべての環境で Unicode を前提にしているわけではありません。例えば、.py ファイルが Unicode(UTF-8) で保存されている場合でも、Windows のコマンドプロンプトでは、文字コードが Shift_JIS になっている場合があります。また、出力先のコンソールが EUC-JP を前提にしている場合もあります。そのような場合にも、正しく文字列を扱えるよう、Python では受け渡しのためのエンコーディング情報を管理しており、その情報に基づいて、文字列をエンコード変換しています。
+
+このような変換処理は Python の内部的に実施するため、まずは、これをほとんど意識しなくても文字列を正しく扱えます。
+しかし、文字列を別のアプリとやり取りするようになると、文字エンコーディングを意識して、明示的にエンコードしなければならない状況が出てます。これを行うのが、`encode` メソッドです。
+
+```python
+txt.encode(encording = 'utf-8', errors = 'strict')
+```
+
+- `txt` : エンコードする文字列
+- `encording` : エンコーディング
+  - `utf-8` : UTF-8
+  - `shift_jis` : Shift_JIS
+  - `euc_jp` : EUC-JP
+  - `latin1` : ISO-8859-1
+  - `ascii` : ASCII
+  - `utf-16` : UTF-16
+  - `utf-32` : UTF-32
+- `errors` : エラー処理
+  - `strict` : エラーが発生した場合は例外を発生させる
+  - `ignore` : エラーが発生した場合は無視する
+  - `replace` : エラーが発生した場合は置換する
+
+例として、文字列を Shift_JIS でエンコードしてみます。
+
+```python
+txt = 'こんにちは'
+print(txt.encode('shift_jis')) # b'\x82\xb1\x82\xf1\x82\xc9\x82\xbf\x82\xcd'
+```
+
+encode メソッドは、エンコードした結果を bytes 型で返します。
+バイト列とは、単なる 0 ~ 255 の値の連なりなので、外部とのやりとりも自由です。バイト列を受け取った側も、その値を決められた形式で変換すれば、元の文字列を復元できます。
+
+#### バイト列をデコードする `decode`
+
+バイト列をデコードするには、`decode` メソッドを使用します。
+
+```python
+任意のバイト文字列.decode(encording = 'utf-8', errors = 'strict')
+```
+
+---
+
+## 日付/時刻の操作
+
+Python で日付/時刻値を扱うには、`datetime` モジュールを使用します。
+
+<Table
+  caption="datetime モジュールの主な型"
+  colWidth={["6rem"]}
+  columns={["型", "説明", "分類"]}
+  data={[
+    ["datetime", "日付/時刻値", "タイムゾーンを設定すると、aware"],
+    ["date", "日付値", "常に native"],
+    ["time", "時刻値", "タイムゾーンを設定すると、aware"],
+    ["timezone", "タイムゾーン情報", "aware"],
+    ["timedelta", "時間差", "native"],
+  ]}
+/>
+
+### 日付/時刻値を生成する
+
+<Table
+  caption="現在の日時を取得するメソッド"
+  colWidth={["6rem"]}
+  columns={["メソッド", "説明"]}
+  data={[
+    ["datetime.today()", "現在の日付を取得する"],
+    ["date.today()", "今日の日付を取得する"],
+    ["datetime.now()", "現在の日時を取得する"],
+    ["datetime.utcnow()", "UTC の現在の日時を取得する"],
+    ["datetime.now(tz)", "指定したタイムゾーンの現在の日時を取得する(tz は timezone オブジェクト)"],
+  ]}
+/>
+
+```python
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+print(datetime.today()) # 2025-07-10 10:13:56.456161
+print(date.today()) # 2025-07-10
+print(datetime.now()) # 2025-07-10 10:13:56.456201
+print(datetime.utcnow()) # 2025-07-10 01:13:56.456204
+print(datetime.now(timezone.utc)) # 2025-07-10 01:13:56.456369+00:00
+print(datetime.now(timezone(timedelta(hours=9), 'JST'))) # 2025-07-10 10:13:56.456379+09:00
+```
+
+#### timezone コンストラクター
+
+timezone コンストラクターは、タイムゾーン情報を作成します。
+
+```python
+timezone(offset)
+```
+
+- `offset` : 時差 (timedelta 型)
+  - `timedelta(hours=9)` : 9 時間の時差
+  - `'JST'` : タイムゾーン名
+  - `'Asia/Tokyo'` : タイムゾーン名
+
+```python
+from datetime import datetime, timezone, timedelta
+
+print(datetime.now(timezone(timedelta(hours=9), 'JST'))) # 2025-07-10 10:13:56.456379+09:00
+```
+
+timezone 型は UTC を基準とした時差を表します。引き数 offset は、UTC からの時差を表す timedelta 型の値です。
+Python 3.9 以降では、`zoneinfo` モジュールを使用して、タイムゾーン情報を取得して指定もできます。
+
+```python
+from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
+
+print(datetime.now(ZoneInfo('Asia/Tokyo'))) # 2025-07-10 10:13:56.456379+09:00
+```
+
+#### datetime/ date/ time コンストラクター
+
+datetime/ date/ time コンストラクターは、日付/時刻値を作成します。
+
+```python
+datetime(year, month, day, hour, minute, second, microsecond, tzinfo)
+```
+
+- `year` : 年
+- `month` : 月
+- `day` : 日
+- `hour` : 時
+- `minute` : 分
+- `second` : 秒
+- `microsecond` : マイクロ秒
+- `tzinfo` : タイムゾーン情報
+
+date コンストラクターでインスタンスを生成する例は、次のようになります。
+
+```python
+from datetime import datetime, timezone, timedelta, date, time
+
+print(datetime(2025, 7, 10, 10, 13, 56, 456379, timezone(timedelta(hours=9), 'JST'))) # 2025-07-10 10:13:56.456379+09:00
+# date コンストラクター
+print(date(2025, 7, 10)) # 2025-07-10 00:00:00
+# time コンストラクター
+print(time(10, 13, 56)) # 10:13:56
+```
+
+#### 日付/時刻文字列から変換する `strptime`、`fromisoformat`
+
+日付/時刻文字列から変換するには、`strptime` メソッドを使用します。
+
+```python
+datetime.strptime(date_string, format)
+```
+
+- `date_string` : 日付/時刻文字列
+- `format` : 日付/時刻文字列のフォーマット
+
+```python
+from datetime import datetime
+
+date_time = datetime.strptime('2025-07-10 10:13:56', '%Y-%m-%d %H:%M:%S')
+print(date_time) # 2025-07-10 10:13:56
+print(date_time.year) # 2025
+print(date_time.month) # 7
+print(date_time.day) # 10
+print(date_time.hour) # 10
+print(date_time.minute) # 13
+print(date_time.second) # 56
+```
+
+`fromisoformat` メソッドは、ISO 8601 形式の日付/時刻文字列から変換します。
+
+```python
+datetime.fromisoformat(date_string)
+```
+
+- `date_string` : ISO 8601 形式の日付/時刻文字列
+
+```python
+from datetime import datetime
+
+date_time = datetime.fromisoformat('2025-07-10T10:13:56+09:00')
+print(date_time) # 2025-07-10 10:13:56+09:00
+```
+
+#### タイムスタンプ値から生成する
+
+タイムスタンプ値から生成するには、`fromtimestamp` メソッドを使用します。
+
+```python
+datetime.fromtimestamp(timestamp, tz = None)
+```
+
+- `timestamp` : タイムスタンプ値
+- `tz` : タイムゾーン情報
+
+```python
+from datetime import datetime, timezone, timedelta
+
+dt = datetime.now(timezone.utc)
+print(dt) # 2025-07-10 01:13:56.456379+00:00
+ts = dt.timestamp()
+print(ts) # 1720700000.456379
+
+date_time = datetime.fromtimestamp(ts, timezone(timedelta(hours=9), 'JST'))
+print(date_time) # 2025-07-10 10:13:56+09:00
+```
+
+#### 一部の要素を置き換えた日付を生成
+
+一部の要素を置き換えた日付を生成するには、`replace` メソッドを使用します。
+
+```python
+datetime.replace(year = None, month = None, day = None, hour = None, minute = None, second = None, microsecond = None, tzinfo = None)
+```
+
+```python
+from datetime import datetime
+
+dt1 = datetime(2025, 7, 10, 10, 13, 56)
+dt2 = dt1.replace(hour=11, minute=14, second=57)
+print(dt1) # 2025-07-10 10:13:56
+print(dt2) # 2025-07-10 11:14:57
+```
+
+### 年月日、時分秒などの時刻要素を取得する
+
+```python
+from datetime import datetime, timezone
+
+dt = datetime.now(timezone.utc)
+print(dt) # 2025-07-10 01:13:56.456379+00:00
+print(dt.year) # 2025
+print(dt.month) # 7
+print(dt.day) # 10
+print(dt.hour) # 10
+print(dt.minute) # 13
+print(dt.second) # 56
+print(dt.microsecond) # 456379
+print(dt.tzinfo) # UTC
+```
+
+その他、datetime 型のインスタンスには、年月日、時分秒などの時刻要素を取得するメソッドがあります。
+
+<Table
+  caption="年月日、時分秒などの時刻要素を取得するメソッド"
+  colWidth={["6rem"]}
+  columns={["メソッド", "説明"]}
+  data={[
+    ["date()", "日付値を取得する"],
+    ["time()", "時刻値を取得する"],
+    ["timetz()", "時刻値とタイムゾーン情報を取得する"],
+    ["timestamp()", "タイムスタンプ値を取得する"],
+    ["toordinal()", "年月日を通し番号に変換する"],
+    ["weekday()", "曜日を取得する"],
+    ["isocalendar()", "年月日を取得する"],
+    ["isoformat()", "ISO 8601 形式の日付/時刻文字列を取得する"],
+    ["strftime()", "日付/時刻文字列を取得する"],
+    ["strptime()", "日付/時刻文字列から変換する"],
+    ["fromisoformat()", "ISO 8601 形式の日付/時刻文字列から変換する"],
+    ["fromtimestamp()", "タイムスタンプ値から変換する"],
+  ]}
+/>
+
+```python
+from datetime import datetime, timezone
+
+dt = datetime.now(timezone.utc)
+print(dt.date()) # 2025-07-10
+print(dt.time()) # 01:13:56.456379
+print(dt.timetz()) # 01:13:56.456379+00:00
+print(dt.timestamp()) # 1720700000.456379
+```
+
+### 日付/時刻値を加算/減算する
+
+指定の日時に対して、15 日 5 時間後、3 週間前の日時を求める例
+
+```python
+from datetime import datetime, timezone, timedelta
+
+dt = datetime.now(timezone.utc)
+print(dt + timedelta(days=15, hours=5)) # 2025-07-25 06:13:56.456379+00:00
+print(dt - timedelta(weeks=3)) # 2025-06-19 01:13:56.456379+00:00
+```
+
+### 日付/時刻値の差分を求める
+
+datetime / date/ time 同士では、加算/減算ができます。特に減算において、差分を求めることができます。
+
+```python
+from datetime import datetime, timezone, timedelta
+
+dt1 = datetime.now(timezone.utc)
+dt2 = datetime.now(timezone.utc) + timedelta(days=15, hours=5)
+print(dt2 - dt1) # 15 days, 5:00:00.000179
+print(dt1 - dt2) # -16 days, 18:59:59.999821
+```
+
+### 日付/時刻値を比較する
+
+日付/時刻値を比較することで、日付時刻のどちらが過去か未来かの判断をすることができます。
+
+```python
+from datetime import datetime
+
+dt1 = datetime(2025, 10, 5, 11, 23, 17, 358)
+dt2 = datetime(2024, 12, 4, 15, 35, 58, 469)
+print(dt1 < dt2) # False
+print(dt1 > dt2) # True
+print(dt1 == dt2) # False
+print(dt1 != dt2) # True
+print(dt1 <= dt2) # False
+```
+
+### 日付/時刻値を整形する
+
+日付/時刻値を整形するには、`strftime` メソッドを使用します。
+
+```python
+datetime.strftime(format)
+```
+
+- `format` : 日付/時刻文字列のフォーマット
+
+<Table
+  caption="日付を整形するための指定子"
+  colWidth={["6rem"]}
+  columns={["指定子", "説明", "例"]}
+  data={[
+    ["`%c`", "日時", "Mon Dec 10 10:13:56 2025"],
+    ["`%x`", "日付", "12/10/25"],
+    ["`%X`", "時刻", "10:13:56"],
+    ["`%y`", "年(2桁)", "25"],
+    ["`%Y`", "年(4桁)", "2025"],
+    ["`%b`", "月(英語)", "Jul"],
+    ["`%B`", "月(英語)", "July"],
+    ["`%m`", "月(2桁 01~12)", "07"],
+    ["`%d`", "日(2桁 01~31)", "10"],
+    ["`%a`", "曜日(英語)", "Mon"],
+    ["`%A`", "曜日(英語)", "Monday"],
+    ["`%w`", "曜日(0:日曜日, 1:月曜日, ..., 6:土曜日)", "3"],
+    ["`%H`", "時(24時間制)(2桁)", "10"],
+    ["`%I`", "時(12時間制)(2桁)", "10"],
+    ["`%p`", "午前/午後", "AM"],
+    ["`%M`", "分(2桁)", "13"],
+    ["`%S`", "秒(2桁)", "56"],
+    ["`%f`", "マイクロ秒(6桁)", "456379"],
+    ["`%z`", "タイムゾーン(UTCの場合は+0000)", "+0000"],
+    ["`%Z`", "タイムゾーン", "UTC"],
+    ["`%j`", "年の通し番号(3桁)", "191"],
+    ["`%U`", "年の週番号(日曜日を1週目の始まりとする)(2桁)", "28"],
+    ["`%W`", "年の週番号(月曜日を1週目の始まりとする)(2桁)", "28"],
+  ]}
+/>
+
+```python
+from datetime import datetime
+
+dt = datetime.now(timezone.utc)
+print(dt.strftime('%Y-%m-%d %H:%M:%S')) # 2025-07-10 01:13:56
+```
+
+strftime メソッドの結果はロケール情報によって変動します。そこで最初に setlocale メソッドで明示的にロケールを設定しておく必要があります。
+
+```python
+setlocale(category, locale = None)
+```
+
+- `category` : ロケール情報のカテゴリ
+  - `locale.LC_ALL` : すべてのロケール情報
+  - `locale.LC_CTYPE` : 文字セット
+  - `locale.LC_NUMERIC` : 数値
+  - `locale.LC_TIME` : 時刻
+  - `locale.LC_COLLATE` : 照合順序
+- `locale` : ロケール情報
+
+### カレンダーを生成する
+
+```python
+import calendar
+
+print(calendar.month(2025, 7))
+```
+
+```text title="出力結果"
+     July 2025
+Mo Tu We Th Fr Sa Su
+    1  2  3  4  5  6
+ 7  8  9 10 11 12 13
+14 15 16 17 18 19 20
+21 22 23 24 25 26 27
+28 29 30 31
+```
+
+`selfweekday` 関数で、カレンダーの最初の曜日を指定することができます。(0: 月曜日, 1: 火曜日, ..., 6: 日曜日)
+デフォルトは月曜日です。
+
+```python
+import calendar
+
+calendar.setfirstweekday(6)
+print(calendar.month(2025, 7))
+```
+
+```text title="出力結果"
+     July 2025
+Su Mo Tu We Th Fr Sa
+       1  2  3  4  5
+ 6  7  8  9 10 11 12
+13 14 15 16 17 18 19
+20 21 22 23 24 25 26
+27 28 29 30 31
+```
+
+さらに、`monthcalendar` 関数で、カレンダーを文字列ではなく、二次元配列として取得することができます。
+
+```python
+import calendar
+
+print(calendar.monthcalendar(2025, 7))
+```
+
+```text title="出力結果"
+[[0, 1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12, 13], [14, 15, 16, 17, 18, 19, 20], [21, 22, 23, 24, 25, 26, 27], [28, 29, 30, 31, 0, 0, 0]]
+```
