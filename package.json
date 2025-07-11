@@ -3,6 +3,11 @@
     "type": "module",
     "description": "",
     "version": "0.0.1",
+    "packageManager": "pnpm@10.12.1",
+    "engines": {
+        "node": ">=22.9.0",
+        "pnpm": ">=10.12.1"
+    },
     "scripts": {
         "dev": "astro dev --port 4322",
         "dev:remote": "astro dev --port 4322 --remote",
